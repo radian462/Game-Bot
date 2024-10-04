@@ -16,4 +16,9 @@ async def on_ready():
     print('ログインしました')
 
 keep_alive()
-client.run(os.getenv("DISCORD_TOKEN"))
+
+TOKEN = os.getenv("DISCORD_TOKEN")
+if TOKEN:
+    client.run()
+else:
+    print("Tokenが見つかりませんでした")
