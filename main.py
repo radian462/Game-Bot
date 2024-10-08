@@ -19,6 +19,6 @@ keep_alive()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 if TOKEN:
-    client.run()
+    client.run(TOKEN)
 else:
     print("Tokenが見つかりませんでした")
