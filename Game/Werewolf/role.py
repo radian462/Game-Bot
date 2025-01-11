@@ -6,7 +6,10 @@ class Role:
         self.is_neutral = False
         self.team = ""
 
+        self.is_kill_protected = False
 
+
+# 村人陣営
 class Villager(Role):
     def __init__(self):
         super().__init__()
@@ -31,6 +34,7 @@ class Medium(Role):
         self.team = "Villager"
 
 
+# 人狼陣営
 class Hunter(Role):
     def __init__(self):
         super().__init__()
@@ -39,6 +43,15 @@ class Hunter(Role):
         self.team = "Villager"
 
 
+class Bakery(Role):
+    def __init__(self):
+        super().__init__()
+        self.name = "パン屋"
+        self.is_villager = True
+        self.team = "Villager"
+
+
+# 人狼陣営
 class Werewolf(Role):
     def __init__(self):
         super().__init__()
@@ -63,6 +76,7 @@ class BlackCat(Role):
         self.team = "Werewolf"
 
 
+# 第三陣営
 class Teruteru(Role):
     def __init__(self):
         super().__init__()
@@ -77,3 +91,5 @@ class Fox(Role):
         self.name = "妖狐"
         self.is_neutral = True
         self.team = "Neutral"
+
+        self.is_kill_protected = True
