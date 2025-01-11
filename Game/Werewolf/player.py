@@ -1,4 +1,4 @@
-from .role import Role
+import role
 
 
 class Player:
@@ -10,7 +10,7 @@ class Player:
 
         self.is_kill_protected = False
 
-    def assign_role(self, role: Role):
+    def assign_role(self, role: role.Role):
         self.role = role
 
     def kill(self):
