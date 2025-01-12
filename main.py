@@ -105,6 +105,9 @@ class JoinView(discord.ui.View):
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
 @app_commands.describe(limit="人数制限")
+@discord.app_commands.choices(
+    limit=[discord.app_commands.Choice(name=i, value=i) for i in range(3, 16)]
+)
 async def werewolf(interaction: discord.Interaction, limit: int = 10):
     view = JoinView(id=interaction.id, timeout=None, limit=limit)
 
