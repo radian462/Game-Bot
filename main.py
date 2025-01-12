@@ -54,11 +54,8 @@ class JoinView(discord.ui.View):
                 description="募集が中止されました",
                 color=discord.Color.red(),
             )
-            
-            await interaction.response.edit_message(
-                embed=embed,
-                view=None
-            )
+
+            await interaction.response.edit_message(embed=embed, view=None)
             del game_participants[self.id]
         else:
             await interaction.response.send_message(
