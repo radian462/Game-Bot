@@ -37,6 +37,34 @@ class JoinView(discord.ui.View):
         self.id = id
         self.limit = limit
 
+    @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
+    async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id == game_participants[self.id]["host"]:
+            pass
+        else:
+            await interaction.response.send_message(
+                "あなたは募集者ではありません", ephemeral=True
+            )
+
+    @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
+    async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id == game_participants[self.id]["host"]:
+            embed = discord.Embed(
+                title=f"人狼ゲーム",
+                description="募集が中止されました",
+                color=discord.Color.red(),
+            )
+            
+            await interaction.response.edit_message(
+                embed=embed,
+                view=None
+            )
+            del game_participants[self.id]
+        else:
+            await interaction.response.send_message(
+                "あなたは募集者ではありません", ephemeral=True
+            )
+
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id not in game_participants[self.id]["players"]:
@@ -68,11 +96,14 @@ class JoinView(discord.ui.View):
                 embed=make_participants_embed(game_participants[self.id], self.limit),
                 view=self,
             )
+        elif interaction.user.id == game_participants[self.id]["host"]:
+            await interaction.response.send_message(
+                "募集者は退出できません", ephemeral=True
+            )
         else:
             await interaction.response.send_message(
                 "あなたは参加していません", ephemeral=True
             )
-    
 
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
