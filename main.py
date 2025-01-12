@@ -39,19 +39,40 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if len(game_participants[self.id]["players"]) + 1 >= self.limit:
-            await interaction.response.send_message(
-                "人数制限に達しました", ephemeral=True
+        if interaction.user.id not in game_participants[self.id]["players"]:
+            if len(game_participants[self.id]["players"]) + 1 >= self.limit:
+                await interaction.response.send_message(
+                    "人数制限に達しました", ephemeral=True
+                )
+                return
+
+            if interaction.user.id != game_participants[self.id]["host"]:
+                game_participants[self.id]["players"].add(interaction.user.id)
+
+            await interaction.response.edit_message(
+                embed=make_participants_embed(game_participants[self.id], self.limit),
+                view=self,
             )
-            return
+        else:
+            await interaction.response.send_message(
+                "すでに参加しています", ephemeral=True
+            )
 
-        if interaction.user.id != game_participants[self.id]["host"]:
-            game_participants[self.id]["players"].add(interaction.user.id)
+    @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
+    async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id in game_participants[self.id]["players"]:
+            if interaction.user.id != game_participants[self.id]["host"]:
+                game_participants[self.id]["players"].remove(interaction.user.id)
 
-        await interaction.response.edit_message(
-            embed=make_participants_embed(game_participants[self.id], self.limit),
-            view=self,
-        )
+            await interaction.response.edit_message(
+                embed=make_participants_embed(game_participants[self.id], self.limit),
+                view=self,
+            )
+        else:
+            await interaction.response.send_message(
+                "あなたは参加していません", ephemeral=True
+            )
+    
 
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
