@@ -39,12 +39,19 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
-        game_participants[self.id]["players"].append(interaction.user.id)
+        if len(game_participants[self.id]["players"]) + 1 >= self.limit:
+            await interaction.response.send_message(
+                "人数制限に達しました", ephemeral=True
+            )
+            return
+
+        if interaction.user.id != game_participants[self.id]["host"]:
+            game_participants[self.id]["players"].add(interaction.user.id)
+
         await interaction.response.edit_message(
             embed=make_participants_embed(game_participants[self.id], self.limit),
             view=self,
         )
-
 
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
@@ -52,7 +59,7 @@ class JoinView(discord.ui.View):
 async def werewolf(interaction: discord.Interaction, limit: int = 10):
     view = JoinView(id=interaction.id, timeout=None, limit=limit)
 
-    participants = {"host": interaction.user.id, "players": []}
+    participants = {"host": interaction.user.id, "players": set()}
     game_participants[interaction.id] = participants
 
     await interaction.response.defer()
