@@ -93,3 +93,18 @@ class Fox(Role):
         self.team = "Neutral"
 
         self.is_kill_protected = True
+
+
+role_classes = [
+    Seer(),
+    Medium(),
+    Hunter(),
+    Bakery(),
+    Werewolf(),
+    Madmate(),
+    BlackCat(),
+    Teruteru(),
+    Fox(),
+]
+
+roles = {role.name: role for role in role_classes}
