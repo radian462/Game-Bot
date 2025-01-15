@@ -1,12 +1,11 @@
 import os
-import random
 from typing import final
 
 import discord
 from discord import app_commands
 from dotenv import load_dotenv
 
-import Game.Werewolf.player as werewolf_player
+import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
 
 client = discord.Client(intents=discord.Intents.default())
@@ -72,25 +71,7 @@ class JoinView(discord.ui.View):
         self.game = werewolf_manager.games[self.id]
         if interaction.user.id == self.game["host"]:
             await update_recruiting_embed(self.id, interaction, show_view=False)
-
-            players_ids = [self.game["host"]] + list(self.game["participants"])
-            werewolf_manager.games[self.id]["players"] = self.game["players"] = [
-                werewolf_player.Player(id) for id in players_ids
-            ]
-
-            roles_list = [
-                role for role, count in self.game["roles"].items() for _ in range(count)
-            ]
-            while len(roles_list) < len(self.game["players"]):
-                roles_list.append(werewolf_role.Villager())
-
-            random.shuffle(roles_list)
-
-            for i, role in enumerate(roles_list):
-                werewolf_manager.games[self.id]["players"][i].assign_role(role)
-
-            for player in werewolf_manager.games[self.id]["players"]:
-                await player.message(f"あなたの役職は{player.role.name}です", client)
+            await werewolf_main.main(self.game, client)
         else:
             await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
 
