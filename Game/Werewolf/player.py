@@ -1,4 +1,5 @@
-import role
+import discord
+import Game.Werewolf.role as role
 
 
 class Player:
@@ -7,13 +8,16 @@ class Player:
         self.status = "Alive"
         self.is_alive = True
         self.role = None
-
         self.is_kill_protected = False
+
+    async def message(self, content: str, client):
+        member = await client.fetch_user(self.id)
+        await member.send(content)
 
     def assign_role(self, role: role.Role):
         self.role = role
 
     def kill(self):
-        if not self.is_kill_protect:
+        if not self.is_kill_protected:  
             self.status = "Killed"
             self.is_alive = False
