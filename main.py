@@ -130,6 +130,7 @@ class WerewolfManager:
         view: JoinView,
     ) -> int:
         self.games[game_id] = {
+            "id": game_id,
             "host": host_id,
             "participants": set(),
             "players": [],
@@ -221,13 +222,26 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
     number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
 )
 async def set_role(interaction: discord.Interaction, role: str, number: int):
-    host_game_id = [
-        game_id
+    host_game_list = [
+        werewolf_manager.games[game_id]
         for game_id, game_info in werewolf_manager.games.items()
         if game_info["host"] == interaction.user.id
-    ][0]
+    ]
 
-    if host_game_id:
+    for game_info in host_game_list:
+        try:
+            channel = client.get_channel(game_info["channel_id"])
+            await channel.fetch_message(game_info["message_id"])
+            host_game_id = game_info["id"]
+            break
+        except discord.errors.NotFound:
+            del werewolf_manager.games[game_info["id"]]
+            continue
+
+    else:
+        host_game_id = None
+
+    if host_game_id is not None:
         werewolf_manager.games[host_game_id]["roles"][
             werewolf_role.roles[role]
         ] = number
@@ -238,6 +252,7 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
         await update_recruiting_embed(host_game_id)
     else:
         await interaction.response.send_message(GAME_NOT_EXIST_MSG, ephemeral=True)
+
 
 load_dotenv()
 
