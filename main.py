@@ -1,12 +1,13 @@
-import random
 import os
+import random
 from typing import final
 
 import discord
 from discord import app_commands
+from dotenv import load_dotenv
 
-import Game.Werewolf.role as werewolf_role
 import Game.Werewolf.player as werewolf_player
+import Game.Werewolf.role as werewolf_role
 
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
@@ -238,5 +239,6 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
     else:
         await interaction.response.send_message(GAME_NOT_EXIST_MSG, ephemeral=True)
 
+load_dotenv()
 
 client.run(os.getenv("DISCORD_TOKEN"))
