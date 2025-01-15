@@ -1,4 +1,5 @@
 import os
+from typing import final
 
 import discord
 from discord import app_commands
@@ -8,6 +9,13 @@ import Game.Werewolf.role as role
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
+NOT_HOST_MSG: final = "あなたは募集者ではありません"
+NOT_PLAYER_MSG: final = "あなたは参加していません"
+ALREADY_PLAYER_MSG: final = "すでに参加しています"
+LIMIT_PLAYER_MSG: final = "人数制限に達しました"
+HOST_JOIN_MSG: final = "募集者は参加できません"
+HOST_LEAVE_MSG: final = "募集者は退出できません"
+GAME_NOT_EXIST_MSG: final = "ゲームが存在しません"
 
 @client.event
 async def on_ready():
@@ -28,7 +36,7 @@ class JoinView(discord.ui.View):
                 >= werewolf_manager.games[self.id]["limit"]
             ):
                 await interaction.response.send_message(
-                    "人数制限に達しました", ephemeral=True
+                    LIMIT_PLAYER_MSG, ephemeral=True
                 )
                 return
 
@@ -36,14 +44,14 @@ class JoinView(discord.ui.View):
                 werewolf_manager.games[self.id]["players"].add(interaction.user.id)
             else:
                 await interaction.response.send_message(
-                    "募集者は参加できません", ephemeral=True
+                    HOST_JOIN_MSG, ephemeral=True
                 )
                 return
 
             await update_recruiting_embed(self.id, interaction)
         else:
             await interaction.response.send_message(
-                "すでに参加しています", ephemeral=True
+                ALREADY_PLAYER_MSG, ephemeral=True
             )
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
@@ -55,11 +63,11 @@ class JoinView(discord.ui.View):
             await update_recruiting_embed(self.id, interaction)
         elif interaction.user.id == werewolf_manager.games[self.id]["host"]:
             await interaction.response.send_message(
-                "募集者は退出できません", ephemeral=True
+                HOST_LEAVE_MSG, ephemeral=True
             )
         else:
             await interaction.response.send_message(
-                "あなたは参加していません", ephemeral=True
+                NOT_PLAYER_MSG, ephemeral=True
             )
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
@@ -68,7 +76,7 @@ class JoinView(discord.ui.View):
             pass
         else:
             await interaction.response.send_message(
-                "あなたは募集者ではありません", ephemeral=True
+                NOT_HOST_MSG, ephemeral=True
             )
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
@@ -84,7 +92,7 @@ class JoinView(discord.ui.View):
             del werewolf_manager.games[self.id]
         else:
             await interaction.response.send_message(
-                "あなたは募集者ではありません", ephemeral=True
+                NOT_HOST_MSG, ephemeral=True
             )
 
     """
@@ -209,7 +217,7 @@ async def set_role(interaction: discord.Interaction, role_name: str, number: int
 
         await update_recruiting_embed(host_game_id)
     else:
-        await interaction.response.send_message("ゲームが存在しません", ephemeral=True)
+        await interaction.response.send_message(GAME_NOT_EXIST_MSG, ephemeral=True)
 
 
 client.run(os.getenv("DISCORD_TOKEN"))
