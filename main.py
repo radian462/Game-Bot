@@ -19,6 +19,7 @@ HOST_JOIN_MSG: final = "募集者は参加できません"
 HOST_LEAVE_MSG: final = "募集者は退出できません"
 GAME_NOT_EXIST_MSG: final = "ゲームが存在しません"
 
+
 @client.event
 async def on_ready():
     await tree.sync()
@@ -34,10 +35,7 @@ class JoinView(discord.ui.View):
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.game = werewolf_manager.games[self.id]
         if interaction.user.id not in self.game["participants"]:
-            if (
-                len(self.game["participants"]) + 1
-                >= self.game["limit"]
-            ):
+            if len(self.game["participants"]) + 1 >= self.game["limit"]:
                 await interaction.response.send_message(
                     LIMIT_PLAYER_MSG, ephemeral=True
                 )
@@ -46,56 +44,54 @@ class JoinView(discord.ui.View):
             if interaction.user.id != self.game["host"]:
                 werewolf_manager.games[self.id]["participants"].add(interaction.user.id)
             else:
-                await interaction.response.send_message(
-                    HOST_JOIN_MSG, ephemeral=True
-                )
+                await interaction.response.send_message(HOST_JOIN_MSG, ephemeral=True)
                 return
 
             await update_recruiting_embed(self.id, interaction)
         else:
-            await interaction.response.send_message(
-                ALREADY_PLAYER_MSG, ephemeral=True
-            )
+            await interaction.response.send_message(ALREADY_PLAYER_MSG, ephemeral=True)
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.game = werewolf_manager.games[self.id]
         if interaction.user.id in self.game["participants"]:
             if interaction.user.id != self.game["host"]:
-                werewolf_manager.games[self.id]["participants"].remove(interaction.user.id)
+                werewolf_manager.games[self.id]["participants"].remove(
+                    interaction.user.id
+                )
 
             await update_recruiting_embed(self.id, interaction)
         elif interaction.user.id == self.game["host"]:
-            await interaction.response.send_message(
-                HOST_LEAVE_MSG, ephemeral=True
-            )
+            await interaction.response.send_message(HOST_LEAVE_MSG, ephemeral=True)
         else:
-            await interaction.response.send_message(
-                NOT_PLAYER_MSG, ephemeral=True
-            )
+            await interaction.response.send_message(NOT_PLAYER_MSG, ephemeral=True)
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.game = werewolf_manager.games[self.id]
         if interaction.user.id == self.game["host"]:
-            players_ids = [self.game["host"]] + list(self.game["participants"])
-            werewolf_manager.games[self.id]["players"] = self.game["players"] = [werewolf_player.Player(id) for id in players_ids]
+            await update_recruiting_embed(self.id, interaction, show_view=False)
 
-            roles_list = [role for role, count in self.game["roles"].items() for _ in range(count)]
+            players_ids = [self.game["host"]] + list(self.game["participants"])
+            werewolf_manager.games[self.id]["players"] = self.game["players"] = [
+                werewolf_player.Player(id) for id in players_ids
+            ]
+
+            roles_list = [
+                role for role, count in self.game["roles"].items() for _ in range(count)
+            ]
             while len(roles_list) < len(self.game["players"]):
                 roles_list.append(werewolf_role.Villager())
 
             random.shuffle(roles_list)
-            
+
             for i, role in enumerate(roles_list):
                 werewolf_manager.games[self.id]["players"][i].assign_role(role)
-            
+
             for player in werewolf_manager.games[self.id]["players"]:
                 await player.message(f"あなたの役職は{player.role.name}です", client)
         else:
-            await interaction.response.send_message(
-                NOT_HOST_MSG, ephemeral=True
-            )
+            await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
     async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -109,9 +105,7 @@ class JoinView(discord.ui.View):
             await interaction.response.edit_message(embed=embed, view=None)
             del werewolf_manager.games[self.id]
         else:
-            await interaction.response.send_message(
-                NOT_HOST_MSG, ephemeral=True
-            )
+            await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
 
     """
     @discord.ui.button(label="⚙️", style=discord.ButtonStyle.grey)
@@ -155,7 +149,7 @@ werewolf_manager = WerewolfManager()
 
 
 async def update_recruiting_embed(
-    game_id: int, interaction: discord.Interaction | None = None
+    game_id: int, interaction: discord.Interaction | None = None, show_view: bool = True
 ) -> discord.Embed:
     game_info = werewolf_manager.games[game_id]
 
@@ -166,7 +160,8 @@ async def update_recruiting_embed(
     )
     embed.add_field(
         name="参加者",
-        value="\n".join([f"<@!{player}>" for player in game_info["participants"]]) or "なし",
+        value="\n".join([f"<@!{player}>" for player in game_info["participants"]])
+        or "なし",
         inline=False,
     )
     embed.add_field(
@@ -181,12 +176,15 @@ async def update_recruiting_embed(
         or "なし",
         inline=False,
     )
+
+    view = game_info["view"] if show_view == True else None
+
     if interaction:
-        await interaction.response.edit_message(embed=embed, view=game_info["view"])
+        await interaction.response.edit_message(embed=embed, view=view)
     else:
         channel = client.get_channel(game_info["channel_id"])
         message = await channel.fetch_message(game_info["message_id"])
-        await message.edit(embed=embed, view=game_info["view"])
+        await message.edit(embed=embed, view=view)
 
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
@@ -229,7 +227,9 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
     ][0]
 
     if host_game_id:
-        werewolf_manager.games[host_game_id]["roles"][werewolf_role.roles[role]] = number
+        werewolf_manager.games[host_game_id]["roles"][
+            werewolf_role.roles[role]
+        ] = number
         await interaction.response.send_message(
             f"{role}を{number}人に設定しました", ephemeral=True
         )
