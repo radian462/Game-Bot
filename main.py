@@ -97,7 +97,7 @@ class JoinView(discord.ui.View):
 
 class WerewolfManager:
     def __init__(self):
-        self.games = {}
+        self.games: dict[int, dict[str, int | set | dict | discord.ui.View]] = {}
 
     def create_game(
         self,
