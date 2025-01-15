@@ -32,17 +32,18 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id not in werewolf_manager.games[self.id]["participants"]:
+        self.game = werewolf_manager.games[self.id]
+        if interaction.user.id not in self.game["participants"]:
             if (
-                len(werewolf_manager.games[self.id]["participants"]) + 1
-                >= werewolf_manager.games[self.id]["limit"]
+                len(self.game["participants"]) + 1
+                >= self.game["limit"]
             ):
                 await interaction.response.send_message(
                     LIMIT_PLAYER_MSG, ephemeral=True
                 )
                 return
 
-            if interaction.user.id != werewolf_manager.games[self.id]["host"]:
+            if interaction.user.id != self.game["host"]:
                 werewolf_manager.games[self.id]["participants"].add(interaction.user.id)
             else:
                 await interaction.response.send_message(
@@ -58,12 +59,13 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id in werewolf_manager.games[self.id]["participants"]:
-            if interaction.user.id != werewolf_manager.games[self.id]["host"]:
+        self.game = werewolf_manager.games[self.id]
+        if interaction.user.id in self.game["participants"]:
+            if interaction.user.id != self.game["host"]:
                 werewolf_manager.games[self.id]["participants"].remove(interaction.user.id)
 
             await update_recruiting_embed(self.id, interaction)
-        elif interaction.user.id == werewolf_manager.games[self.id]["host"]:
+        elif interaction.user.id == self.game["host"]:
             await interaction.response.send_message(
                 HOST_LEAVE_MSG, ephemeral=True
             )
@@ -74,12 +76,13 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id == werewolf_manager.games[self.id]["host"]:
-            players_ids = [werewolf_manager.games[self.id]["host"]] + list(werewolf_manager.games[self.id]["participants"])
-            werewolf_manager.games[self.id]["players"] = [werewolf_player.Player(id) for id in players_ids]
+        self.game = werewolf_manager.games[self.id]
+        if interaction.user.id == self.game["host"]:
+            players_ids = [self.game["host"]] + list(self.game["participants"])
+            werewolf_manager.games[self.id]["players"] = self.game["players"] = [werewolf_player.Player(id) for id in players_ids]
 
-            roles_list = [role for role, count in werewolf_manager.games[self.id]["roles"].items() for _ in range(count)]
-            while len(roles_list) < len(werewolf_manager.games[self.id]["players"]):
+            roles_list = [role for role, count in self.game["roles"].items() for _ in range(count)]
+            while len(roles_list) < len(self.game["players"]):
                 roles_list.append(werewolf_role.Villager())
 
             random.shuffle(roles_list)
