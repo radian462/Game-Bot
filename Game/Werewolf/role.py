@@ -1,12 +1,27 @@
+import tomllib
+from typing import final
+
+with open('Game/Werewolf/role_description.toml', 'rb') as f:
+    ROLE_DESCRIPTIONS: final = tomllib.load(f)
+
+
 class Role:
     def __init__(self):
         self.name = ""
         self.is_villager = False
         self.is_werewolf = False
         self.is_neutral = False
+
         self.team = ""
+        self.win_condition = ""
+        self.description = ""
 
         self.is_kill_protected = False
+
+    def initialize_role(self):
+        self.team = ROLE_DESCRIPTIONS[self.name]["Team"]
+        self.win_condition = ROLE_DESCRIPTIONS[self.name]["WinCondition"]
+        self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
 
 # 村人陣営
@@ -15,7 +30,8 @@ class Villager(Role):
         super().__init__()
         self.name = "村人"
         self.is_villager = True
-        self.team = "Villager"
+
+        self.initialize_role()
 
 
 class Seer(Role):
@@ -23,7 +39,8 @@ class Seer(Role):
         super().__init__()
         self.name = "占い師"
         self.is_villager = True
-        self.team = "Villager"
+
+        self.initialize_role()
 
 
 class Medium(Role):
@@ -31,7 +48,8 @@ class Medium(Role):
         super().__init__()
         self.name = "霊媒師"
         self.is_villager = True
-        self.team = "Villager"
+
+        self.initialize_role()
 
 
 # 人狼陣営
@@ -40,7 +58,8 @@ class Hunter(Role):
         super().__init__()
         self.name = "狩人"
         self.is_villager = True
-        self.team = "Villager"
+
+        self.initialize_role()
 
 
 class Bakery(Role):
@@ -48,7 +67,8 @@ class Bakery(Role):
         super().__init__()
         self.name = "パン屋"
         self.is_villager = True
-        self.team = "Villager"
+
+        self.initialize_role()
 
 
 # 人狼陣営
@@ -57,7 +77,8 @@ class Werewolf(Role):
         super().__init__()
         self.name = "人狼"
         self.is_werewolf = True
-        self.team = "Werewolf"
+
+        self.initialize_role()
 
 
 class Madmate(Role):
@@ -65,7 +86,8 @@ class Madmate(Role):
         super().__init__()
         self.name = "狂人"
         self.is_villager = True
-        self.team = "Werewolf"
+
+        self.initialize_role()
 
 
 class BlackCat(Role):
@@ -73,7 +95,8 @@ class BlackCat(Role):
         super().__init__()
         self.name = "黒猫"
         self.is_villager = True
-        self.team = "Werewolf"
+
+        self.initialize_role()
 
 
 # 第三陣営
@@ -82,7 +105,8 @@ class Teruteru(Role):
         super().__init__()
         self.name = "てるてる"
         self.is_neutral = True
-        self.team = "Neutral"
+
+        self.initialize_role()
 
 
 class Fox(Role):
@@ -90,11 +114,13 @@ class Fox(Role):
         super().__init__()
         self.name = "妖狐"
         self.is_neutral = True
-        self.team = "Neutral"
+
+        self.initialize_role()
 
         self.is_kill_protected = True
 
 
+# 役職のインスタンスを作成するリスト
 role_classes = [
     Seer(),
     Medium(),
