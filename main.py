@@ -1,4 +1,7 @@
+import logging
 import os
+import traceback
+from logging import getLogger
 from typing import final
 
 import discord
@@ -19,6 +22,8 @@ HOST_JOIN_MSG: final = "募集者は参加できません"
 HOST_LEAVE_MSG: final = "募集者は退出できません"
 GAME_NOT_EXIST_MSG: final = "ゲームが存在しません"
 
+ERROR_TEMPLATE: final = "エラーが発生しました\n"
+
 
 @client.event
 async def on_ready():
@@ -26,45 +31,78 @@ async def on_ready():
     print("ログインしました")
 
 
+def make_logger(name: str, level=logging.DEBUG) -> getLogger:
+    logger = getLogger(name)
+    logger.setLevel(level)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("[%(levelname)s:%(name)s] %(message)s - %(asctime)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    return logger
+
+
 class JoinView(discord.ui.View):
     def __init__(self, id: str, timeout: int | None = None):
         super().__init__(timeout=timeout)
         self.id = id
+        self.logger = make_logger(__name__)
 
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.game = werewolf_manager.games[self.id]
-        if interaction.user.id not in self.game["participants"]:
-            if len(self.game["participants"]) + 1 >= self.game["limit"]:
-                await interaction.response.send_message(
-                    LIMIT_PLAYER_MSG, ephemeral=True
-                )
-                return
+        try:
+            self.game = werewolf_manager.games[self.id]
+            if interaction.user.id not in self.game["participants"]:
+                if len(self.game["participants"]) + 1 >= self.game["limit"]:
+                    await interaction.response.send_message(
+                        LIMIT_PLAYER_MSG, ephemeral=True
+                    )
+                    self.logger.info(
+                        f"{interaction.user.id} could not join the game for limit."
+                    )
+                    return
 
-            if interaction.user.id != self.game["host"]:
-                werewolf_manager.games[self.id]["participants"].add(interaction.user.id)
+                if interaction.user.id != self.game["host"]:
+                    werewolf_manager.games[self.id]["participants"].add(
+                        interaction.user.id
+                    )
+                    self.logger.info(f"{interaction.user.id} joined the game.")
+                else:
+                    await interaction.response.send_message(
+                        HOST_JOIN_MSG, ephemeral=True
+                    )
+                    return
+
+                await update_recruiting_embed(self.id, interaction)
             else:
-                await interaction.response.send_message(HOST_JOIN_MSG, ephemeral=True)
-                return
-
-            await update_recruiting_embed(self.id, interaction)
-        else:
-            await interaction.response.send_message(ALREADY_PLAYER_MSG, ephemeral=True)
+                await interaction.response.send_message(
+                    ALREADY_PLAYER_MSG, ephemeral=True
+                )
+        except Exception as e:
+            traceback.print_exc()
+            self.logger.debug(self.game)
+            await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.game = werewolf_manager.games[self.id]
-        if interaction.user.id in self.game["participants"]:
-            if interaction.user.id != self.game["host"]:
-                werewolf_manager.games[self.id]["participants"].remove(
-                    interaction.user.id
-                )
+        try:
+            self.game = werewolf_manager.games[self.id]
+            if interaction.user.id in self.game["participants"]:
+                if interaction.user.id != self.game["host"]:
+                    werewolf_manager.games[self.id]["participants"].remove(
+                        interaction.user.id
+                    )
 
-            await update_recruiting_embed(self.id, interaction)
-        elif interaction.user.id == self.game["host"]:
-            await interaction.response.send_message(HOST_LEAVE_MSG, ephemeral=True)
-        else:
-            await interaction.response.send_message(NOT_PLAYER_MSG, ephemeral=True)
+                self.logger.info(f"{interaction.user.id} leaved the game.")
+                await update_recruiting_embed(self.id, interaction)
+            elif interaction.user.id == self.game["host"]:
+                await interaction.response.send_message(HOST_LEAVE_MSG, ephemeral=True)
+            else:
+                await interaction.response.send_message(NOT_PLAYER_MSG, ephemeral=True)
+        except Exception as e:
+            traceback.print_exc()
+            self.logger.debug(self.game)
+            await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -77,17 +115,26 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
     async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if interaction.user.id == werewolf_manager.games[self.id]["host"]:
-            embed = discord.Embed(
-                title=f"人狼ゲーム",
-                description="募集が中止されました",
-                color=discord.Color.red(),
-            )
+        try:
+            if interaction.user.id == werewolf_manager.games[self.id]["host"]:
+                embed = discord.Embed(
+                    title=f"人狼ゲーム",
+                    description="募集が中止されました",
+                    color=discord.Color.red(),
+                )
 
-            await interaction.response.edit_message(embed=embed, view=None)
-            del werewolf_manager.games[self.id]
-        else:
-            await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
+                await interaction.response.edit_message(embed=embed, view=None)
+                del werewolf_manager.games[self.id]
+
+                self.logger.info(
+                    f"{interaction.user.id} canceled the game of {self.id}."
+                )
+            else:
+                await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
+        except Exception as e:
+            traceback.print_exc()
+            self.logger.debug(self.game)
+            await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     """
     @discord.ui.button(label="⚙️", style=discord.ButtonStyle.grey)
@@ -176,21 +223,25 @@ async def update_recruiting_embed(
     limit=[discord.app_commands.Choice(name=i, value=i) for i in range(3, 16)]
 )
 async def werewolf(interaction: discord.Interaction, limit: int = 10):
-    view = JoinView(id=interaction.id, timeout=None)
+    try:
+        view = JoinView(id=interaction.id, timeout=None)
 
-    await interaction.response.defer()
-    message = await interaction.followup.send(view=view)
+        await interaction.response.defer()
+        message = await interaction.followup.send(view=view)
 
-    werewolf_manager.create_game(
-        game_id=interaction.id,
-        host_id=interaction.user.id,
-        limit=limit,
-        message_id=message.id,
-        channel_id=interaction.channel_id,
-        view=view,
-    )
+        werewolf_manager.create_game(
+            game_id=interaction.id,
+            host_id=interaction.user.id,
+            limit=limit,
+            message_id=message.id,
+            channel_id=interaction.channel_id,
+            view=view,
+        )
 
-    await update_recruiting_embed(interaction.id)
+        await update_recruiting_embed(interaction.id)
+    except Exception as e:
+        traceback.print_exc()
+        await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
 
 @tree.command(name="role", description="人狼ゲームの役職を設定します")
@@ -203,36 +254,42 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
     number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
 )
 async def set_role(interaction: discord.Interaction, role: str, number: int):
-    host_game_list = [
-        werewolf_manager.games[game_id]
-        for game_id, game_info in werewolf_manager.games.items()
-        if game_info["host"] == interaction.user.id
-    ]
+    try:
+        # 現在の募集中のゲームを取得
+        host_game_list = [
+            werewolf_manager.games[game_id]
+            for game_id, game_info in werewolf_manager.games.items()
+            if game_info["host"] == interaction.user.id
+        ]
 
-    for game_info in host_game_list:
-        try:
-            channel = client.get_channel(game_info["channel_id"])
-            await channel.fetch_message(game_info["message_id"])
-            host_game_id = game_info["id"]
-            break
-        except discord.errors.NotFound:
-            del werewolf_manager.games[game_info["id"]]
-            continue
+        # ここの処理は削除されたメッセージを除外するため
+        for game_info in host_game_list:
+            try:
+                channel = client.get_channel(game_info["channel_id"])
+                await channel.fetch_message(game_info["message_id"])
+                host_game_id = game_info["id"]
+                break
+            except discord.errors.NotFound:
+                del werewolf_manager.games[game_info["id"]]
+                continue
 
-    else:
-        host_game_id = None
+        else:
+            host_game_id = None
 
-    if host_game_id is not None:
-        werewolf_manager.games[host_game_id]["roles"][
-            werewolf_role.roles[role]
-        ] = number
-        await interaction.response.send_message(
-            f"{role}を{number}人に設定しました", ephemeral=True
-        )
+        if host_game_id is not None:
+            werewolf_manager.games[host_game_id]["roles"][
+                werewolf_role.roles[role]
+            ] = number
+            await interaction.response.send_message(
+                f"{role}を{number}人に設定しました", ephemeral=True
+            )
 
-        await update_recruiting_embed(host_game_id)
-    else:
-        await interaction.response.send_message(GAME_NOT_EXIST_MSG, ephemeral=True)
+            await update_recruiting_embed(host_game_id)
+        else:
+            await interaction.response.send_message(GAME_NOT_EXIST_MSG, ephemeral=True)
+    except Exception as e:
+        traceback.print_exc()
+        await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
 
 load_dotenv()
