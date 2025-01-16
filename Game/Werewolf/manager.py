@@ -6,14 +6,13 @@ from Game.Werewolf import player, role
 
 
 class RoleInfoView(discord.ui.View):
-    def __init__(self, game: dict, timeout: int | None = None):
+    def __init__(self, players: list, timeout: int | None = None):
         super().__init__(timeout=timeout)
-        self.game = game
+        self.playes = players
 
     @discord.ui.button(emoji="ℹ️", style=discord.ButtonStyle.gray)
     async def InfoButton(self, interaction: discord.Interaction, button: discord.ui.Button):
-        player_list = self.game["players"]
-        player_role = [p.role for p in player_list if interaction.user.id == p.id][0]
+        player_role = [p.role for p in self.players if interaction.user.id == p.id][0]
         embed = discord.Embed(
             title=player_role.name,
             color=discord.Color.green(),
@@ -39,24 +38,28 @@ class RoleInfoView(discord.ui.View):
         
 class WerewolfManager:
     def __init__(self, game: dict, client: discord.Client):
-        self.game = game
         self.id = game["id"]
         self.client = client
 
-    async def game_start(self):
+        self.game = game
+        self.roles = self.game["roles"]
+        self.available_roles = []
+        self.message_id = self.game["message_id"]
+        self.channel_id = self.game["channel_id"]
         players_ids = [self.game["host"]] + list(self.game["participants"])
-        self.game["players"] = [player.Player(id) for id in players_ids]
+        self.players = [player.Player(id) for id in players_ids]
 
-        roles_list = [
+    async def game_start(self):
+        self.available_roles = [
             role for role, count in self.game["roles"].items() for _ in range(count)
         ]
-        while len(roles_list) < len(self.game["players"]):
-            roles_list.append(role.Villager())
-        random.shuffle(roles_list)
+        while len(self.available_roles) < len(self.game["players"]):
+            self.available_roles.append(role.Villager())
+        random.shuffle(self.available_roles)
 
-        for i, role in enumerate(roles_list):
-            self.game["players"][i].assign_role(role)
+        for i, role in enumerate(self.available_roles):
+            self.players[i].assign_role(role)
         
-        role_info_view = RoleInfoView(self.game)
-        for p in self.game["players"]:
+        role_info_view = RoleInfoView(self.players)
+        for p in self.players:
             await p.message(f"あなたの役職は{p.role.name}です", self.client, view=role_info_view)
