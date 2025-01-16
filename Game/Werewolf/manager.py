@@ -8,7 +8,7 @@ from Game.Werewolf import player, role
 class RoleInfoView(discord.ui.View):
     def __init__(self, players: list, timeout: int | None = None):
         super().__init__(timeout=timeout)
-        self.playes = players
+        self.players = players
 
     @discord.ui.button(emoji="ℹ️", style=discord.ButtonStyle.gray)
     async def InfoButton(self, interaction: discord.Interaction, button: discord.ui.Button):
