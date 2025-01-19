@@ -8,10 +8,12 @@ from Game.Werewolf import player, role
 class RoleInfoView(discord.ui.View):
     def __init__(self, players: list, timeout: int | None = None):
         super().__init__(timeout=timeout)
-        self.playes = players
+        self.players = players
 
     @discord.ui.button(emoji="ℹ️", style=discord.ButtonStyle.gray)
-    async def InfoButton(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def InfoButton(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         player_role = [p.role for p in self.players if interaction.user.id == p.id][0]
         embed = discord.Embed(
             title=player_role.name,
@@ -35,21 +37,29 @@ class RoleInfoView(discord.ui.View):
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        
+
 class WerewolfManager:
     def __init__(self, game: dict, client: discord.Client):
         self.id = game["id"]
         self.client = client
-
         self.game = game
         self.roles = self.game["roles"]
         self.available_roles = []
         self.message_id = self.game["message_id"]
         self.channel_id = self.game["channel_id"]
-        players_ids = [self.game["host"]] + list(self.game["participants"])
-        self.players = [player.Player(id) for id in players_ids]
+        self.players = []
+        self.alive_players = []
+        self.turns = 0
 
     async def game_start(self):
+        players_ids = [self.game["host"]] + list(self.game["participants"])
+        self.players = []
+        for id in players_ids:
+            p = player.Player(id, self.client)
+            await p.initialize()
+            self.players.append(p)
+        self.alive_players = self.players
+
         self.available_roles = [
             role for role, count in self.game["roles"].items() for _ in range(count)
         ]
@@ -59,7 +69,7 @@ class WerewolfManager:
 
         for i, role in enumerate(self.available_roles):
             self.players[i].assign_role(role)
-        
+
         role_info_view = RoleInfoView(self.players)
         for p in self.players:
-            await p.message(f"あなたの役職は{p.role.name}です", self.client, view=role_info_view)
+            await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
