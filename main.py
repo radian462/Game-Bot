@@ -1,7 +1,6 @@
-import logging
 import os
 import traceback
-from logging import getLogger
+
 from typing import final
 
 import discord
@@ -10,6 +9,7 @@ from dotenv import load_dotenv
 
 import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
+from make_logger import make_logger
 
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
@@ -29,17 +29,6 @@ ERROR_TEMPLATE: final = "エラーが発生しました\n"
 async def on_ready():
     await tree.sync()
     print("ログインしました")
-
-
-def make_logger(name: str, level=logging.DEBUG) -> getLogger:
-    logger = getLogger(name)
-    logger.setLevel(level)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("[%(levelname)s:%(name)s] %(message)s - %(asctime)s")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    return logger
 
 
 class JoinView(discord.ui.View):
@@ -162,7 +151,7 @@ class WerewolfManager:
             "host": host_id,
             "participants": set(),
             "players": [],
-            "roles": {werewolf_role.Werewolf(): 1},
+            "roles": {werewolf_role.roles["人狼"]: 1},
             "limit": limit,
             "message_id": message_id,
             "channel_id": channel_id,

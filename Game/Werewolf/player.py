@@ -17,8 +17,10 @@ class Player:
         self.member = await self.client.fetch_user(self.id)
         self.name = self.member.name
 
-    async def message(self, content: str, view=None):
-        await self.member.send(content, view=view)
+    async def message(
+        self, content: str | None = None, embed: discord.Embed | None = None, view=None
+    ):
+        return await self.member.send(content, embed=embed, view=view)
 
     def assign_role(self, role: role.Role):
         self.role = role

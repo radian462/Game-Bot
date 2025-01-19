@@ -1,9 +1,12 @@
+import asyncio
+from collections import Counter
 import random
 
 import discord
+from discord.ui import View, Select
 
 from Game.Werewolf import player, role
-
+from make_logger import make_logger
 
 class RoleInfoView(discord.ui.View):
     def __init__(self, players: list, timeout: int | None = None):
@@ -38,6 +41,35 @@ class RoleInfoView(discord.ui.View):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+class PlayerChoiceView(discord.ui.View):
+    def __init__(self, choices: list[player.Player]):
+        super().__init__()
+        self.choices = choices
+        self.result = None
+        self.options = [
+            discord.SelectOption(label=choice.name, value=choice.id)
+            for choice in self.choices
+        ]
+        self.add_item(PlayerSelect(self.options))
+
+
+class PlayerSelect(Select):
+    def __init__(self, options):
+        super().__init__(placeholder="プレイヤーを選択してください...", options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        selected_user_id = int(self.values[0])
+        selected_label = next(
+            (option.label for option in self.options if option.value == self.values[0]),
+            "不明なプレイヤー",
+        )
+        self.view.result = selected_user_id
+        await interaction.response.send_message(
+            f"{selected_label} に投票しました。", ephemeral=True
+        )
+        self.view.stop()
+
+
 class WerewolfManager:
     def __init__(self, game: dict, client: discord.Client):
         self.id = game["id"]
@@ -50,6 +82,8 @@ class WerewolfManager:
         self.players = []
         self.alive_players = []
         self.turns = 0
+
+        self.logger = make_logger(__name__)
 
     async def game_start(self):
         players_ids = [self.game["host"]] + list(self.game["participants"])
@@ -73,3 +107,41 @@ class WerewolfManager:
         role_info_view = RoleInfoView(self.players)
         for p in self.players:
             await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
+
+    async def night(self):
+        await self.kill_votes()
+
+    async def kill_votes(self):
+        async def wait_for_vote(player: player.Player):
+            embed = discord.Embed(
+                title="キル投票", description="襲撃対象を選んでください"
+            )
+            view = PlayerChoiceView(self.alive_players)
+
+            message = await player.message(embed=embed, view=view)
+            await view.wait()
+
+            return view.result
+
+        alive_werewolf_players = [p for p in self.alive_players if p.role.is_werewolf]
+
+        tasks = []
+        for p in alive_werewolf_players:
+            tasks.append(wait_for_vote(p))
+
+        results = await asyncio.gather(*tasks)
+
+        counter = Counter(results)
+        modes = [key for key, count in counter.items() if count == max(counter.values())]
+
+        if modes:
+            chosen_mode = random.choice(modes)
+
+        target_players = [p for p in self.alive_players if p.id == chosen_mode][0]
+        target_players.kill()
+
+        for p in alive_werewolf_players:
+            await p.message(f"{target_players.name}を襲撃します")
+
+        self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
+
