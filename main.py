@@ -222,6 +222,7 @@ async def update_recruiting_embed(
 @discord.app_commands.choices(
     limit=[discord.app_commands.Choice(name=i, value=i) for i in range(3, 16)]
 )
+@discord.app_commands.guild_only()
 async def werewolf(interaction: discord.Interaction, limit: int = 10):
     try:
         view = JoinView(id=interaction.id, timeout=None)
@@ -253,6 +254,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
     ],
     number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
 )
+@discord.app_commands.guild_only()
 async def set_role(interaction: discord.Interaction, role: str, number: int):
     try:
         # 現在の募集中のゲームを取得
