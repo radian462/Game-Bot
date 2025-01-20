@@ -1,6 +1,7 @@
 import discord
 
 import Game.Werewolf.role as role
+from make_logger import make_logger
 
 
 class Player:
@@ -12,6 +13,8 @@ class Player:
         self.is_alive = True
         self.role = None
         self.is_kill_protected = False
+
+        self.logger = make_logger(__name__)
 
     async def initialize(self):
         self.member = await self.client.fetch_user(self.id)
@@ -29,3 +32,7 @@ class Player:
         if not self.is_kill_protected:
             self.status = "Killed"
             self.is_alive = False
+
+            self.logger.info(f"{self.id} was killed.")
+        else:
+            self.logger.info(f"{self.id} was blocked to kill.")

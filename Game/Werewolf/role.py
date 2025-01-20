@@ -24,6 +24,10 @@ class Role:
         self.win_condition = ROLE_DESCRIPTIONS[self.name]["WinCondition"]
         self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
+    async def night_ability(self):
+        #オーバーライド用
+        pass
+
 
 # 村人陣営
 class Villager(Role):

@@ -43,7 +43,7 @@ class RoleInfoView(discord.ui.View):
 
 
 class PlayerChoiceView(discord.ui.View):
-    def __init__(self, choices: list[player.Player]):
+    def __init__(self, choices: list[player.Player]) -> None:
         super().__init__()
         self.choices = choices
         self.result = None
@@ -58,7 +58,7 @@ class PlayerSelect(Select):
     def __init__(self, options):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction) -> None:
         selected_user_id = int(self.values[0])
         self.view.result = selected_user_id
 
@@ -85,9 +85,9 @@ class WerewolfManager:
         self.alive_players = []
         self.turns = 0
 
-        self.logger = make_logger(__name__)
+        self.logger = make_logger(str(self.id))
 
-    async def game_start(self):
+    async def game_start(self) -> None:
         players_ids = [self.game["host"]] + list(self.game["participants"])
         self.players = []
         for id in players_ids:
@@ -110,11 +110,25 @@ class WerewolfManager:
         for p in self.players:
             await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
 
-    async def night(self):
+    async def night(self) -> None:
+        embed = discord.Embed(
+            title="人狼ゲーム", description="夜になりました。"
+        )
+        channel = self.client.get_channel(self.channel_id)
+        await channel.send(embed=embed)
+
+        await self.night_ability_time()
         await self.kill_votes()
 
-    async def kill_votes(self):
-        async def wait_for_vote(player: player.Player):
+    async def night_ability_time(self) -> None:
+        tasks = []
+        for p in self.alive_players:
+            tasks.append(p.role.night_ability())
+
+        await asyncio.gather(*tasks)
+
+    async def kill_votes(self) -> None:
+        async def wait_for_vote(player: player.Player) -> int:
             embed = discord.Embed(
                 title="キル投票", description="襲撃対象を選んでください"
             )
