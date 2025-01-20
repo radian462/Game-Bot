@@ -20,6 +20,7 @@ class Role:
 
     def initialize_role(self):
         self.team = ROLE_DESCRIPTIONS[self.name]["Team"]
+        self.fortune_result = ROLE_DESCRIPTIONS[self.name]["FortuneResult"]
         self.win_condition = ROLE_DESCRIPTIONS[self.name]["WinCondition"]
         self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
