@@ -1,6 +1,5 @@
 import os
 import traceback
-
 from typing import final
 
 import discord

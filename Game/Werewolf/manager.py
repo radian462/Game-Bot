@@ -1,12 +1,13 @@
 import asyncio
-from collections import Counter
 import random
+from collections import Counter
 
 import discord
-from discord.ui import View, Select
+from discord.ui import Select, View
 
 from Game.Werewolf import player, role
 from make_logger import make_logger
+
 
 class RoleInfoView(discord.ui.View):
     def __init__(self, players: list, timeout: int | None = None):
@@ -59,13 +60,14 @@ class PlayerSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         selected_user_id = int(self.values[0])
-        selected_label = next(
-            (option.label for option in self.options if option.value == self.values[0]),
-            "不明なプレイヤー",
-        )
         self.view.result = selected_user_id
+
+        selected_user_name = [
+            op.label for op in self.options if selected_user_id == op.value
+        ][0]
+
         await interaction.response.send_message(
-            f"{selected_label} に投票しました。", ephemeral=True
+            f"{selected_user_name} に投票しました。", ephemeral=True
         )
         self.view.stop()
 
@@ -132,7 +134,9 @@ class WerewolfManager:
         results = await asyncio.gather(*tasks)
 
         counter = Counter(results)
-        modes = [key for key, count in counter.items() if count == max(counter.values())]
+        modes = [
+            key for key, count in counter.items() if count == max(counter.values())
+        ]
 
         if modes:
             chosen_mode = random.choice(modes)
@@ -144,4 +148,3 @@ class WerewolfManager:
             await p.message(f"{target_players.name}を襲撃します")
 
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
-
