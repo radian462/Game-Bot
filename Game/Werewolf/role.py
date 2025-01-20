@@ -25,7 +25,7 @@ class Role:
         self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
     async def night_ability(self):
-        #オーバーライド用
+        # オーバーライド用
         pass
 
 

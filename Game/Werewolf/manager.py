@@ -111,9 +111,7 @@ class WerewolfManager:
             await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
 
     async def night(self) -> None:
-        embed = discord.Embed(
-            title="人狼ゲーム", description="夜になりました。"
-        )
+        embed = discord.Embed(title="人狼ゲーム", description="夜になりました。")
         channel = self.client.get_channel(self.channel_id)
         await channel.send(embed=embed)
 
