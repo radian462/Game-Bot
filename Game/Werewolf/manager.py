@@ -43,7 +43,7 @@ class RoleInfoView(discord.ui.View):
 
 
 class PlayerChoiceView(discord.ui.View):
-    def __init__(self, choices: list[player.Player]) -> None:
+    def __init__(self, choices: list[player.Player], allow_skip: bool = False) -> None:
         super().__init__()
         self.choices = choices
         self.result = None
@@ -51,6 +51,10 @@ class PlayerChoiceView(discord.ui.View):
             discord.SelectOption(label=choice.name, value=choice.id)
             for choice in self.choices
         ]
+
+        if allow_skip:
+            self.options.append(discord.SelectOption(label="スキップ", value="-skip"))
+
         self.add_item(PlayerSelect(self.options))
 
 
@@ -59,16 +63,25 @@ class PlayerSelect(Select):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        selected_user_id = int(self.values[0])
-        self.view.result = selected_user_id
+        selected_user_id = int(self.values[0]) if self.values[0] != "-skip" else None
+        self.view.result = {
+            "user_id": interaction.user.id,
+            "target_id": selected_user_id,
+        }
 
-        selected_user_name = [
-            op.label for op in self.options if selected_user_id == op.value
-        ][0]
+        if selected_user_id is not None:
+            selected_user_name = [
+                op.label for op in self.options if selected_user_id == op.value
+            ][0]
 
-        await interaction.response.send_message(
-            f"{selected_user_name} に投票しました。", ephemeral=True
-        )
+            await interaction.response.send_message(
+                f"{selected_user_name} に投票しました。", ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                "スキップしました。", ephemeral=True
+            )
+
         self.view.stop()
 
 
@@ -81,6 +94,7 @@ class WerewolfManager:
         self.available_roles = []
         self.message_id = self.game["message_id"]
         self.channel_id = self.game["channel_id"]
+        self.channel = self.client.get_channel(self.channel_id)
         self.players = []
         self.alive_players = []
         self.turns = 0
@@ -95,6 +109,7 @@ class WerewolfManager:
             await p.initialize()
             self.players.append(p)
         self.alive_players = self.players
+        self.last_alive_players = self.players
 
         self.available_roles = [
             role for role, count in self.game["roles"].items() for _ in range(count)
@@ -111,9 +126,8 @@ class WerewolfManager:
             await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
 
     async def night(self) -> None:
-        embed = discord.Embed(title="人狼ゲーム", description="夜になりました。")
-        channel = self.client.get_channel(self.channel_id)
-        await channel.send(embed=embed)
+        embed = discord.Embed(title="人狼ゲーム", description="夜になりました。プレイヤーはDMに移動してください。")
+        await self.channel.send(embed=embed)
 
         await self.night_ability_time()
         await self.kill_votes()
@@ -135,7 +149,7 @@ class WerewolfManager:
             message = await player.message(embed=embed, view=view)
             await view.wait()
 
-            return view.result
+            return view.result["target_id"]
 
         alive_werewolf_players = [p for p in self.alive_players if p.role.is_werewolf]
 
@@ -160,3 +174,11 @@ class WerewolfManager:
             await p.message(f"{target_players.name}を襲撃します")
 
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
+
+    async def day(self):
+        embed = discord.Embed(
+            title="人狼ゲーム",
+            description="朝になりました。議論を行い、誰を追放するか決めてください。",
+            color=0xFFFACD,
+        )
+        await self.channel.send(embed=embed)

@@ -8,3 +8,4 @@ async def main(game: dict, client: discord.Client):
     await werewolf_manager.game_start()
 
     await werewolf_manager.night()
+    await werewolf_manager.day()
