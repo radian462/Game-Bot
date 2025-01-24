@@ -101,6 +101,9 @@ class WerewolfManager:
 
         self.logger = make_logger(str(self.id))
 
+    def refresh_alive_players(self):
+        self.alive_players = [p for p in self.players if p.is_alive]
+
     async def game_start(self) -> None:
         players_ids = [self.game["host"]] + list(self.game["participants"])
         self.players = []
@@ -173,12 +176,21 @@ class WerewolfManager:
         for p in alive_werewolf_players:
             await p.message(f"{target_players.name}を襲撃します")
 
+        self.refresh_alive_players()
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
 
     async def day(self):
+        today_killed_players = [player for player in self.last_alive_players if player not in self.alive_players]
+
         embed = discord.Embed(
             title="人狼ゲーム",
             description="朝になりました。議論を行い、誰を追放するか決めてください。",
             color=0xFFFACD,
+        )
+        embed.add_field(
+            name="本日の死亡者",
+            value="\n".join([f"<@!{player.id}>" for player in today_killed_players])
+            or "なし",
+            inline=False,
         )
         await self.channel.send(embed=embed)
