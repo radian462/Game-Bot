@@ -129,11 +129,14 @@ class WerewolfManager:
             await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
 
     async def night(self) -> None:
-        embed = discord.Embed(title="人狼ゲーム", description="夜になりました。プレイヤーはDMに移動してください。")
+        embed = discord.Embed(title="人狼ゲーム", description=f"夜になりました。プレイヤーは<@!{self.client.application_id}>のDMに移動してください。")
         await self.channel.send(embed=embed)
 
         await self.night_ability_time()
         await self.kill_votes()
+
+        for p in self.last_alive_players:
+            await p.message(f"<#{self.channel.id}>に戻ってください")
 
     async def night_ability_time(self) -> None:
         tasks = []
@@ -147,7 +150,7 @@ class WerewolfManager:
             embed = discord.Embed(
                 title="キル投票", description="襲撃対象を選んでください"
             )
-            view = PlayerChoiceView(self.alive_players)
+            view = PlayerChoiceView(self.last_alive_players)
 
             message = await player.message(embed=embed, view=view)
             await view.wait()
@@ -170,7 +173,7 @@ class WerewolfManager:
         if modes:
             chosen_mode = random.choice(modes)
 
-        target_players = [p for p in self.alive_players if p.id == chosen_mode][0]
+        target_players = [p for p in self.last_alive_players if p.id == chosen_mode][0]
         target_players.kill()
 
         for p in alive_werewolf_players:
