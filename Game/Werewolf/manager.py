@@ -53,7 +53,7 @@ class PlayerChoiceView(discord.ui.View):
         ]
 
         if allow_skip:
-            self.options.append(discord.SelectOption(label="スキップ", value="-skip"))
+            self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
         self.add_item(PlayerSelect(self.options))
 
@@ -63,7 +63,7 @@ class PlayerSelect(Select):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        selected_user_id = int(self.values[0]) if self.values[0] != "-skip" else None
+        selected_user_id = int(self.values[0]) if self.values[0] != "skip" else None
         self.view.result = {
             "user_id": interaction.user.id,
             "target_id": selected_user_id,
