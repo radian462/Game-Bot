@@ -81,7 +81,8 @@ class PlayerSelect(Select):
             await interaction.response.send_message(
                 "スキップしました。", ephemeral=True
             )
-
+        
+        await interaction.message.edit(view=None)
         self.view.stop()
 
 
