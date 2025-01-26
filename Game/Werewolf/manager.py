@@ -165,6 +165,7 @@ class WerewolfManager:
 
         for i, r in enumerate(self.available_roles):
             self.players[i].assign_role(r)
+            self.logger.info(f"{self.players[i].id} has been assigned {r.name}")
 
         role_info_view = RoleInfoView(self.players)
         for p in self.players:
