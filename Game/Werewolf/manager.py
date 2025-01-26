@@ -70,12 +70,8 @@ class PlayerSelect(Select):
         }
 
         if selected_user_id is not None:
-            selected_user_name = [
-                op.label for op in self.options if selected_user_id == op.value
-            ][0]
-
             await interaction.response.send_message(
-                f"{selected_user_name} に投票しました。", ephemeral=True
+                f"<@!{selected_user_id}> に投票しました。", ephemeral=True
             )
         else:
             await interaction.response.send_message(
@@ -132,7 +128,7 @@ class WerewolfManager:
     async def night(self) -> None:
         embed = discord.Embed(title="人狼ゲーム", description=f"夜になりました。プレイヤーは<@!{self.client.application_id}>のDMに移動してください。")
         await self.channel.send(embed=embed)
-
+        
         await self.night_ability_time()
         await self.kill_votes()
 
@@ -178,7 +174,7 @@ class WerewolfManager:
         target_players.kill()
 
         for p in alive_werewolf_players:
-            await p.message(f"{target_players.name}を襲撃します")
+            await p.message(f"<@!{target_players.id}>を襲撃します")
 
         self.refresh_alive_players()
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
