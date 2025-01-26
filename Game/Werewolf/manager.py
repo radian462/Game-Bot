@@ -99,12 +99,20 @@ class DayVoteView(discord.ui.View):
 class DaySelect(Select):
     def __init__(self, options, players):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
-        self.votes = {}
         self.players = players
+        self.votes = {}
 
     async def callback(self, interaction: discord.Interaction):
-        if interaction.user.id in self.votes.keys():
+        alive_player_ids = (p.id for p in self.players if p.is_alive)
+
+        if interaction.user.id in self.view.votes:
             await interaction.response.send_message("既に投票済みです", ephemeral=True)
+            return
+
+        if interaction.user.id not in alive_player_ids:
+            await interaction.response.send_message(
+                "生存しているプレイヤーだけが投票できます", ephemeral=True
+            )
             return
 
         if self.values[0] == "skip":
@@ -118,9 +126,9 @@ class DaySelect(Select):
                 f"<@!{selected_user_id}> に投票しました。", ephemeral=True
             )
 
-        self.votes[interaction.user.id] = selected_user_id
+        self.view.votes[interaction.user.id] = selected_user_id
 
-        if len(self.votes) == len(self.players):
+        if len(self.view.votes) == len(self.players):
             await interaction.message.edit(view=None)
             self.view.stop()
 
@@ -229,25 +237,27 @@ class WerewolfManager:
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
 
     async def execute_vote(self) -> None:
-        embed = discord.Embed(
-            title="処刑投票", description="処刑対象を選んでください"
-        )
+        embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = DayVoteView(self.alive_players)
 
         message = await self.channel.send(embed=embed, view=view)
         await view.wait()
 
-        filtered_votes = [v for v in view.votes.values() if v is not None]
+        filtered_votes = [v for v in view.votes.values()]
         counter = Counter(filtered_votes)
 
         if not counter:
+            execute_target = None
+        elif counter.get(None, 0) * 2 >= len(view.votes):
             execute_target = None
         else:
             most_common = counter.most_common()
             max_count = most_common[0][1]
             result_candidates = [k for k, v in most_common if v == max_count]
-            execute_target = result_candidates[0] if len(result_candidates) == 1 else None
-        
+            execute_target = (
+                result_candidates[0] if len(result_candidates) == 1 else None
+            )
+
         if execute_target is None:
             await self.channel.send(f"誰も処刑されませんでした。")
             self.logger.info(f"Nobody was executed.")
