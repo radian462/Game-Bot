@@ -1,7 +1,7 @@
 import discord
 
 import Game.Werewolf.role as role
-from make_logger import make_logger
+from Modules.logger import make_logger
 
 
 class Player:

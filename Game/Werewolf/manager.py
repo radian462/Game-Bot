@@ -6,7 +6,7 @@ import discord
 from discord.ui import Select, View
 
 from Game.Werewolf import player, role
-from make_logger import make_logger
+from Modules.logger import make_logger
 
 
 class RoleInfoView(discord.ui.View):

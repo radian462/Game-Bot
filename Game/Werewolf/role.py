@@ -1,7 +1,7 @@
 import tomllib
 from typing import final
 
-with open("Game/Werewolf/resources/role_description.toml", "rb") as f:
+with open("Resources/role_description.toml", "rb") as f:
     ROLE_DESCRIPTIONS: final = tomllib.load(f)
 
 

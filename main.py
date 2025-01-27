@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
-from make_logger import make_logger
+from Modules.logger import make_logger
 
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
