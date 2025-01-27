@@ -145,6 +145,8 @@ class WerewolfManager:
         self.channel = self.client.get_channel(self.channel_id)
         self.players = []
         self.alive_players = []
+        self.winner = []
+        self.win_team = []
         self.turns = 0
 
         self.logger = make_logger(str(self.id))
@@ -187,10 +189,14 @@ class WerewolfManager:
         await self.channel.send(embed=embed)
 
         await self.night_ability_time()
-        await self.kill_votes()
+
+        if self.turns != 0:
+            await self.kill_votes()
 
         for p in self.last_alive_players:
             await p.message(f"<#{self.channel.id}>に戻ってください")
+
+        self.turns += 1
 
     async def night_ability_time(self) -> None:
         tasks = []
@@ -291,3 +297,33 @@ class WerewolfManager:
         await self.channel.send(embed=embed)
 
         await self.execute_vote()
+
+    def win_check(self) -> bool:
+        if (
+            len([p for p in self.alive_players if p.role.is_werewolf])
+            >= len(self.alive_players) / 2
+        ):
+            self.winner = [p for p in self.players if p.role.team == "人狼"]
+            self.win_team = "人狼"
+            return True
+        elif len([p for p in self.alive_players if p.role.is_werewolf]) == 0:
+            self.winner = [p for p in self.players if p.role.team == "村人"]
+            self.win_team = "村人"
+            return True
+        else:
+            return False
+
+    async def game_end(self) -> None:
+        embed = discord.Embed(
+            title="人狼ゲーム",
+            description=f"{self.win_team}勝利",
+            color=0xFFD700,
+        )
+        embed.add_field(
+            name="勝者",
+            value="\n".join([f"<@!{player.id}>" for player in self.winner]),
+            inline=False,
+        )
+        await self.channel.send(embed=embed)
+
+        self.logger.info(f"Game has ended. Winners: {self.winner}")
