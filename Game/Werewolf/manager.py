@@ -1,6 +1,7 @@
 import asyncio
 import random
 from collections import Counter
+from typing import Type
 
 import discord
 from discord.ui import Select, View
@@ -43,10 +44,12 @@ class RoleInfoView(discord.ui.View):
 
 
 class PlayerChoiceView(discord.ui.View):
-    def __init__(self, choices: list[player.Player], allow_skip: bool = False) -> None:
+    def __init__(
+        self, choices: list[player.Player], SelectClass: Type, allow_skip: bool = False
+    ) -> None:
         super().__init__()
         self.choices = choices
-        self.result = None
+        self.votes = {}
         self.options = [
             discord.SelectOption(label=choice.name, value=choice.id)
             for choice in self.choices
@@ -55,19 +58,16 @@ class PlayerChoiceView(discord.ui.View):
         if allow_skip:
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
-        self.add_item(PlayerSelect(self.options))
+        self.add_item(SelectClass(self.options))
 
 
-class PlayerSelect(Select):
-    def __init__(self, options):
+class AbilitySelect(Select):
+    def __init__(self, options, players):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
 
     async def callback(self, interaction: discord.Interaction) -> None:
         selected_user_id = int(self.values[0]) if self.values[0] != "skip" else None
-        self.view.result = {
-            "user_id": interaction.user.id,
-            "target_id": selected_user_id,
-        }
+        self.view.votes[interaction.user.id] = selected_user_id
 
         if selected_user_id is not None:
             await interaction.response.send_message(
@@ -80,20 +80,6 @@ class PlayerSelect(Select):
 
         await interaction.message.edit(view=None)
         self.view.stop()
-
-
-class DayVoteView(discord.ui.View):
-    def __init__(self, players: list[player.Player]) -> None:
-        super().__init__()
-        self.players = players
-        self.votes = {}
-        self.options = [
-            discord.SelectOption(label=player.name, value=player.id)
-            for player in self.players
-        ]
-
-        self.options.append(discord.SelectOption(label="スキップ", value="skip"))
-        self.add_item(DaySelect(self.options, self.players))
 
 
 class DaySelect(Select):
@@ -211,12 +197,17 @@ class WerewolfManager:
             embed = discord.Embed(
                 title="キル投票", description="襲撃対象を選んでください"
             )
-            view = PlayerChoiceView(self.last_alive_players)
+            view = PlayerChoiceView(
+                choices=self.alive_players,
+                SelectClass=lambda options: AbilitySelect(options, self.alive_players),
+                allow_skip=False
+            )
+
 
             message = await player.message(embed=embed, view=view)
             await view.wait()
 
-            return view.result["target_id"]
+            return list(view.votes.values())[0]
 
         alive_werewolf_players = [p for p in self.alive_players if p.role.is_werewolf]
 
@@ -268,7 +259,12 @@ class WerewolfManager:
 
     async def execute_vote(self) -> None:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
-        view = DayVoteView(self.alive_players)
+        view = PlayerChoiceView(
+            choices=self.alive_players,
+            SelectClass=lambda options: DaySelect(options, self.alive_players),
+            allow_skip=True
+        )
+
 
         message = await self.channel.send(embed=embed, view=view)
         await view.wait()
