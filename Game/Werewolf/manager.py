@@ -181,6 +181,7 @@ class WerewolfManager:
         for p in self.players:
             await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
 
+    # 以下夜の処理
     async def night(self) -> None:
         embed = discord.Embed(
             title="人狼ゲーム",
@@ -242,6 +243,29 @@ class WerewolfManager:
         self.refresh_alive_players()
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
 
+    # 以下昼の処理
+    async def day(self):
+        today_killed_players = [
+            player
+            for player in self.last_alive_players
+            if player not in self.alive_players
+        ]
+
+        embed = discord.Embed(
+            title="人狼ゲーム",
+            description="朝になりました。議論を行い、誰を追放するか決めてください。",
+            color=0xFFFACD,
+        )
+        embed.add_field(
+            name="本日の死亡者",
+            value="\n".join([f"<@!{player.id}>" for player in today_killed_players])
+            or "なし",
+            inline=False,
+        )
+        await self.channel.send(embed=embed)
+
+        await self.execute_vote()
+
     async def execute_vote(self) -> None:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = DayVoteView(self.alive_players)
@@ -276,28 +300,7 @@ class WerewolfManager:
 
         self.last_alive_players = self.alive_players
 
-    async def day(self):
-        today_killed_players = [
-            player
-            for player in self.last_alive_players
-            if player not in self.alive_players
-        ]
-
-        embed = discord.Embed(
-            title="人狼ゲーム",
-            description="朝になりました。議論を行い、誰を追放するか決めてください。",
-            color=0xFFFACD,
-        )
-        embed.add_field(
-            name="本日の死亡者",
-            value="\n".join([f"<@!{player.id}>" for player in today_killed_players])
-            or "なし",
-            inline=False,
-        )
-        await self.channel.send(embed=embed)
-
-        await self.execute_vote()
-
+    # 以下ゲーム終了処理
     def win_check(self) -> bool:
         if (
             len([p for p in self.alive_players if p.role.is_werewolf])
