@@ -82,7 +82,7 @@ class AbilitySelect(Select):
         self.view.stop()
 
 
-class DaySelect(Select):
+class ExecuteSelect(Select):
     def __init__(self, options, players):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
         self.players = players
@@ -261,7 +261,7 @@ class WerewolfManager:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = PlayerChoiceView(
             choices=self.alive_players,
-            SelectClass=lambda options: DaySelect(options, self.alive_players),
+            SelectClass=lambda options: ExecuteSelect(options, self.alive_players),
             allow_skip=True
         )
 
