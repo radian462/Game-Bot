@@ -6,6 +6,7 @@ from typing import Literal
 import discord
 from discord.ui import Select, View
 
+import Modules.global_value as g
 from Game.Werewolf import player, role
 from Modules.logger import make_logger
 from Modules.translator import Translator
@@ -145,7 +146,7 @@ class WerewolfManager:
         self.turns = 0
 
         self.lang = "ja"
-        self.t = Translator(self.lang)
+        self.t = g.translators[self.id]
         self.logger = make_logger("Werewolf", self.id)
 
     def refresh_alive_players(self):
@@ -153,7 +154,7 @@ class WerewolfManager:
 
     async def game_start(self) -> None:
         self.logger.info("Game has started.")
-        
+
         players_ids = [self.game["host"]] + list(self.game["participants"])
         self.players = []
         for id in players_ids:
@@ -178,7 +179,10 @@ class WerewolfManager:
 
         role_info_view = RoleInfoView(self.players)
         for p in self.players:
-            await p.message(f"あなたの役職は{self.t.getstring(p.role.name)}です", view=role_info_view)
+            await p.message(
+                f"あなたの役職は{self.t.getstring(p.role.name)}です",
+                view=role_info_view,
+            )
 
     # 以下夜の処理
     async def night(self) -> None:

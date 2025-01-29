@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
+import Modules.global_value as g
 from Modules.logger import make_logger
 from Modules.translator import Translator
 
@@ -26,6 +27,7 @@ ERROR_TEMPLATE: final = "エラーが発生しました\n"
 
 
 logger = make_logger("System")
+g.translators = {}
 
 
 @client.event
@@ -121,9 +123,7 @@ class JoinView(discord.ui.View):
                 await interaction.response.edit_message(embed=embed, view=None)
                 del werewolf_manager.games[self.id]
 
-                logger.info(
-                    f"{interaction.user.id} canceled the game of {self.id}."
-                )
+                logger.info(f"{interaction.user.id} canceled the game of {self.id}.")
             else:
                 await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
         except Exception as e:
@@ -165,6 +165,8 @@ class WerewolfManager:
             "view": view,
         }
 
+        g.translators[game_id] = self.t
+
         return game_id
 
     def delete_game(self, game_id: int):
@@ -178,7 +180,8 @@ async def update_recruiting_embed(
     game_id: int, interaction: discord.Interaction | None = None, show_view: bool = True
 ) -> discord.Embed:
     game_info = werewolf_manager.games[game_id]
-    t = Translator("ja")
+
+    t = g.translators[game_id]
 
     embed = discord.Embed(
         title=f"人狼ゲーム({len(game_info["participants"]) + 1}/{game_info['limit']}人)",
@@ -212,6 +215,7 @@ async def update_recruiting_embed(
         channel = client.get_channel(game_info["channel_id"])
         message = await channel.fetch_message(game_info["message_id"])
         await message.edit(embed=embed, view=view)
+
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
 @app_commands.describe(limit="人数制限")
