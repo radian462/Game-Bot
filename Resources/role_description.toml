@@ -1,59 +1,59 @@
-["村人"]
-Team = "村人"
-FortuneResult = "村人"
+["Villager"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "キル能力を持つ役職を全て処刑する"
 Description = "特別な能力を持たない役職です。\n積極的に議論に参加し、村を平和に導きましょう。"
 
-["占い師"]
-Team = "村人"
-FortuneResult = "村人"
+["Seer"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "キル能力を持つ役職を全て処刑する"
 Description = "毎晩、生存者の中から1人を占い、その人の陣営を知ることができます。"
 
-["霊媒師"]
-Team = "村人"
-FortuneResult = "村人"
+["Medium"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "キル能力を持つ役職を全て処刑する"
 Description = "毎晩、処刑された人を占い、その人の陣営を知ることができます。"
 
-["狩人"]
-Team = "村人"
-FortuneResult = "村人"
+["Hunter"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "キル能力を持つ役職を全て処刑する"
 Description = "毎晩、他のプレイヤー1人を人狼の襲撃から守ることができます。"
 
-["パン屋"]
-Team = "村人"
-FortuneResult = "村人"
+["Bakery"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "キル能力を持つ役職を全て処刑する"
 Description = "毎朝、生存している場合パンを配り、パン屋が生存していることを村に知らせることができます。"
 
-["人狼"]
-Team = "人狼"
-FortuneResult = "人狼"
+["Werewolf"]
+Team = "TeamWerewolf"
+FortuneResult = "TeamWerewolf"
 WinCondition = "人狼以外のキル能力を持つ役職を全滅させて、人狼の人数が生存者の半分以上になること。"
 Description = "毎晩、襲撃するプレイヤーを決めてその人を襲撃することができます。\n襲撃されたプレイヤーは死亡します。村人を全滅させて村を滅ぼしましょう。"
 
-["狂人"]
-Team = "人狼"
-FortuneResult = "村人"
+["Madmate"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "人狼の勝利"
 Description = "村人ですが、人狼の味方です。\nうまく議論をそらして、人狼を守りましょう。"
 
-["黒猫"]
-Team = "人狼"
-FortuneResult = "村人"
+["BlackCat"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
 WinCondition = "人狼の勝利"
 Description = "村人ですが、人狼の味方です。\n処刑されたときランダムな一人を道連れで処刑する事ができます。\nうまく議論をそらして、人狼を守りましょう。"
 
-["てるてる"]
-Team = "第三陣営"
-FortuneResult = "第三陣営"
+["Teruteru"]
+Team = "TeamNeutral"
+FortuneResult = "TeamNeutral"
 WinCondition = "処刑される"
 Description = "村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は処刑されること。うまく議論を操り、処刑されましょう。"
 
-["妖狐"]
-Team = "第三陣営"
-FortuneResult = "第三陣営"
+["Fox"]
+Team = "TeamNeutral"
+FortuneResult = "TeamNeutral"
 WinCondition = "ゲーム終了時まで生存する"
 Description = "村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は生き延びること。人狼から襲撃を受けても死亡しませんが、占い師に占われると呪殺されます。生き延びるために、うまく立ち回りましょう。"

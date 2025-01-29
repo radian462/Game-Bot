@@ -8,6 +8,7 @@ from discord.ui import Select, View
 
 from Game.Werewolf import player, role
 from Modules.logger import make_logger
+from Modules.translator import Translator
 
 
 class RoleInfoView(discord.ui.View):
@@ -136,12 +137,15 @@ class WerewolfManager:
         self.message_id = self.game["message_id"]
         self.channel_id = self.game["channel_id"]
         self.channel = self.client.get_channel(self.channel_id)
+
         self.players = []
         self.alive_players = []
         self.winner = []
         self.win_team = []
         self.turns = 0
 
+        self.lang = "ja"
+        self.t = Translator(self.lang)
         self.logger = make_logger("Werewolf", self.id)
 
     def refresh_alive_players(self):
@@ -174,7 +178,7 @@ class WerewolfManager:
 
         role_info_view = RoleInfoView(self.players)
         for p in self.players:
-            await p.message(f"あなたの役職は{p.role.name}です", view=role_info_view)
+            await p.message(f"あなたの役職は{self.t.getstring(p.role.name)}です", view=role_info_view)
 
     # 以下夜の処理
     async def night(self) -> None:
@@ -305,12 +309,12 @@ class WerewolfManager:
             len([p for p in self.alive_players if p.role.is_werewolf])
             >= len(self.alive_players) / 2
         ):
-            self.winner = [p for p in self.players if p.role.team == "人狼"]
-            self.win_team = "人狼"
+            self.winner = [p for p in self.players if p.role.team == "TeamWerewolf"]
+            self.win_team = "TeamWerewolf"
             return True
         elif len([p for p in self.alive_players if p.role.is_werewolf]) == 0:
-            self.winner = [p for p in self.players if p.role.team == "村人"]
-            self.win_team = "村人"
+            self.winner = [p for p in self.players if p.role.team == "TeamVillager"]
+            self.win_team = "TeamVillager"
             return True
         else:
             return False
@@ -318,7 +322,7 @@ class WerewolfManager:
     async def game_end(self) -> None:
         embed = discord.Embed(
             title="人狼ゲーム",
-            description=f"{self.win_team}勝利",
+            description=f"{self.t.getstring(self.win_team)}勝利",
             color=0xFFD700,
         )
         embed.add_field(

@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
 from Modules.logger import make_logger
+from Modules.translator import Translator
 
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
@@ -141,6 +142,7 @@ class JoinView(discord.ui.View):
 class WerewolfManager:
     def __init__(self):
         self.games: dict[int, dict[str, int | set | dict | discord.ui.View]] = {}
+        self.t = Translator("ja")
 
     def create_game(
         self,
@@ -156,7 +158,7 @@ class WerewolfManager:
             "host": host_id,
             "participants": set(),
             "players": [],
-            "roles": {werewolf_role.roles["人狼"]: 1},
+            "roles": {werewolf_role.roles["Werewolf"]: 1},
             "limit": limit,
             "message_id": message_id,
             "channel_id": channel_id,
@@ -176,6 +178,7 @@ async def update_recruiting_embed(
     game_id: int, interaction: discord.Interaction | None = None, show_view: bool = True
 ) -> discord.Embed:
     game_info = werewolf_manager.games[game_id]
+    t = Translator("ja")
 
     embed = discord.Embed(
         title=f"人狼ゲーム({len(game_info["participants"]) + 1}/{game_info['limit']}人)",
@@ -192,7 +195,7 @@ async def update_recruiting_embed(
         name="役職",
         value="\n".join(
             [
-                f"{role.name} {count}人"
+                f"{t.getstring(role.name)} {count}人"
                 for role, count in game_info["roles"].items()
                 if count > 0
             ]
@@ -209,7 +212,6 @@ async def update_recruiting_embed(
         channel = client.get_channel(game_info["channel_id"])
         message = await channel.fetch_message(game_info["message_id"])
         await message.edit(embed=embed, view=view)
-
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
 @app_commands.describe(limit="人数制限")

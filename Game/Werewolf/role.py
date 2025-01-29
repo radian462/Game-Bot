@@ -19,6 +19,7 @@ class Role:
         self.is_kill_protected = False
 
     def initialize_role(self):
+        self.name = self.__class__.__name__ 
         self.team = ROLE_DESCRIPTIONS[self.name]["Team"]
         self.fortune_result = ROLE_DESCRIPTIONS[self.name]["FortuneResult"]
         self.win_condition = ROLE_DESCRIPTIONS[self.name]["WinCondition"]
@@ -33,7 +34,6 @@ class Role:
 class Villager(Role):
     def __init__(self):
         super().__init__()
-        self.name = "村人"
         self.is_villager = True
 
         self.initialize_role()
@@ -42,7 +42,6 @@ class Villager(Role):
 class Seer(Role):
     def __init__(self):
         super().__init__()
-        self.name = "占い師"
         self.is_villager = True
 
         self.initialize_role()
@@ -51,7 +50,6 @@ class Seer(Role):
 class Medium(Role):
     def __init__(self):
         super().__init__()
-        self.name = "霊媒師"
         self.is_villager = True
 
         self.initialize_role()
@@ -61,7 +59,6 @@ class Medium(Role):
 class Hunter(Role):
     def __init__(self):
         super().__init__()
-        self.name = "狩人"
         self.is_villager = True
 
         self.initialize_role()
@@ -70,7 +67,6 @@ class Hunter(Role):
 class Bakery(Role):
     def __init__(self):
         super().__init__()
-        self.name = "パン屋"
         self.is_villager = True
 
         self.initialize_role()
@@ -80,7 +76,6 @@ class Bakery(Role):
 class Werewolf(Role):
     def __init__(self):
         super().__init__()
-        self.name = "人狼"
         self.is_werewolf = True
 
         self.initialize_role()
@@ -89,7 +84,6 @@ class Werewolf(Role):
 class Madmate(Role):
     def __init__(self):
         super().__init__()
-        self.name = "狂人"
         self.is_villager = True
 
         self.initialize_role()
@@ -98,7 +92,6 @@ class Madmate(Role):
 class BlackCat(Role):
     def __init__(self):
         super().__init__()
-        self.name = "黒猫"
         self.is_villager = True
 
         self.initialize_role()
@@ -108,7 +101,6 @@ class BlackCat(Role):
 class Teruteru(Role):
     def __init__(self):
         super().__init__()
-        self.name = "てるてる"
         self.is_neutral = True
 
         self.initialize_role()
@@ -117,7 +109,6 @@ class Teruteru(Role):
 class Fox(Role):
     def __init__(self):
         super().__init__()
-        self.name = "妖狐"
         self.is_neutral = True
 
         self.initialize_role()

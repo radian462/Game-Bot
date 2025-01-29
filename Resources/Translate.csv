@@ -1,0 +1,22 @@
+# このようにコメントを書くことができます
+
+Key,ja
+
+# 役職
+Villager,村人
+Seer,占い師
+Medium,霊媒師
+Hunter,狩人
+Bakery,パン屋
+Werewolf,人狼
+Madmate,狂人
+BlackCat,黒猫
+Teruteru,てるてる
+Fox,妖狐
+
+# 陣営
+TeamVillager,村人陣営
+TeamWerewolf,人狼陣営
+TeamNeutral,第三陣営
+
+# 
