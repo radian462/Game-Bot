@@ -1,7 +1,7 @@
 import asyncio
 import random
 from collections import Counter
-from typing import Type
+from typing import Literal
 
 import discord
 from discord.ui import Select, View
@@ -45,11 +45,12 @@ class RoleInfoView(discord.ui.View):
 
 class PlayerChoiceView(discord.ui.View):
     def __init__(
-        self, choices: list[player.Player], SelectClass: Type, allow_skip: bool = False
+        self, choices: list[player.Player], process: Literal["Execute", "Ability"], allow_skip: bool = False
     ) -> None:
         super().__init__()
         self.choices = choices
         self.votes = {}
+        self.process = process
         self.options = [
             discord.SelectOption(label=choice.name, value=choice.id)
             for choice in self.choices
@@ -58,63 +59,60 @@ class PlayerChoiceView(discord.ui.View):
         if allow_skip:
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
-        self.add_item(SelectClass(self.options))
+        self.add_item(GenericSelect(self.options, self.choices, self.process))
+       
 
-
-class AbilitySelect(Select):
-    def __init__(self, options, players):
-        super().__init__(placeholder="プレイヤーを選択してください...", options=options)
-
-    async def callback(self, interaction: discord.Interaction) -> None:
-        selected_user_id = int(self.values[0]) if self.values[0] != "skip" else None
-        self.view.votes[interaction.user.id] = selected_user_id
-
-        if selected_user_id is not None:
-            await interaction.response.send_message(
-                f"<@!{selected_user_id}> に投票しました。", ephemeral=True
-            )
-        else:
-            await interaction.response.send_message(
-                "スキップしました。", ephemeral=True
-            )
-
-        await interaction.message.edit(view=None)
-        self.view.stop()
-
-
-class ExecuteSelect(Select):
-    def __init__(self, options, players):
+class GenericSelect(Select):
+    def __init__(self, options: list[discord.SelectOption], players: list[player.Player], process: Literal["Execute", "Ability"]):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
         self.players = players
         self.votes = {}
+        self.process = process
 
-    async def callback(self, interaction: discord.Interaction):
-        alive_player_ids = (p.id for p in self.players if p.is_alive)
+    async def callback(self, interaction: discord.Interaction) -> None:
+        if self.process == "Execute":
+            alive_player_ids = (p.id for p in self.players if p.is_alive)
 
-        if interaction.user.id in self.view.votes:
-            await interaction.response.send_message("既に投票済みです", ephemeral=True)
-            return
+            if interaction.user.id in self.view.votes:
+                await interaction.response.send_message("既に投票済みです", ephemeral=True)
+                return
 
-        if interaction.user.id not in alive_player_ids:
-            await interaction.response.send_message(
-                "生存しているプレイヤーだけが投票できます", ephemeral=True
-            )
-            return
+            if interaction.user.id not in alive_player_ids:
+                await interaction.response.send_message(
+                    "生存しているプレイヤーだけが投票できます", ephemeral=True
+                )
+                return
+            if self.values[0] == "skip":
+                selected_user_id = None
+                await interaction.response.send_message(
+                    "スキップしました。", ephemeral=True
+                )
+            else:
+                selected_user_id = int(self.values[0])
+                await interaction.response.send_message(
+                    f"<@!{selected_user_id}> に投票しました。", ephemeral=True
+                )
 
-        if self.values[0] == "skip":
-            selected_user_id = None
-            await interaction.response.send_message(
-                "スキップしました。", ephemeral=True
-            )
-        else:
-            selected_user_id = int(self.values[0])
-            await interaction.response.send_message(
-                f"<@!{selected_user_id}> に投票しました。", ephemeral=True
-            )
+            self.view.votes[interaction.user.id] = selected_user_id
 
-        self.view.votes[interaction.user.id] = selected_user_id
+            if len(self.view.votes) == len(self.players):
+                await interaction.message.edit(view=None)
+                self.view.stop()
 
-        if len(self.view.votes) == len(self.players):
+
+        elif self.process == "Ability":
+            selected_user_id = int(self.values[0]) if self.values[0] != "skip" else None
+            self.view.votes[interaction.user.id] = selected_user_id
+
+            if selected_user_id is not None:
+                await interaction.response.send_message(
+                    f"<@!{selected_user_id}> に投票しました。", ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    "スキップしました。", ephemeral=True
+                )
+
             await interaction.message.edit(view=None)
             self.view.stop()
 
@@ -199,7 +197,7 @@ class WerewolfManager:
             )
             view = PlayerChoiceView(
                 choices=self.alive_players,
-                SelectClass=lambda options: AbilitySelect(options, self.alive_players),
+                process="Ability",
                 allow_skip=False
             )
 
@@ -261,7 +259,7 @@ class WerewolfManager:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = PlayerChoiceView(
             choices=self.alive_players,
-            SelectClass=lambda options: ExecuteSelect(options, self.alive_players),
+            process="Execute",
             allow_skip=True
         )
 
