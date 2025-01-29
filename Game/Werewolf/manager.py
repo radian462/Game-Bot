@@ -135,12 +135,14 @@ class WerewolfManager:
         self.win_team = []
         self.turns = 0
 
-        self.logger = make_logger(str(self.id))
+        self.logger = make_logger("Werewolf", self.id)
 
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
 
     async def game_start(self) -> None:
+        self.logger.info("Game has started.")
+        
         players_ids = [self.game["host"]] + list(self.game["participants"])
         self.players = []
         for id in players_ids:
@@ -200,9 +202,8 @@ class WerewolfManager:
             view = PlayerChoiceView(
                 choices=self.alive_players,
                 SelectClass=lambda options: AbilitySelect(options, self.alive_players),
-                allow_skip=False
+                allow_skip=False,
             )
-
 
             message = await player.message(embed=embed, view=view)
             await view.wait()
@@ -262,9 +263,8 @@ class WerewolfManager:
         view = PlayerChoiceView(
             choices=self.alive_players,
             SelectClass=lambda options: ExecuteSelect(options, self.alive_players),
-            allow_skip=True
+            allow_skip=True,
         )
-
 
         message = await self.channel.send(embed=embed, view=view)
         await view.wait()

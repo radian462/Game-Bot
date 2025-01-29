@@ -14,7 +14,7 @@ class Player:
         self.role = None
         self.is_kill_protected = False
 
-        self.logger = make_logger(__name__)
+        self.logger = make_logger("Werewolf.Player", id)
 
     async def initialize(self):
         self.member = await self.client.fetch_user(self.id)

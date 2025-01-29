@@ -5,7 +5,11 @@ attrs==24.3.0
 discord.py==2.4.0
 frozenlist==1.5.0
 idna==3.10
+markdown-it-py==3.0.0
+mdurl==0.1.2
 multidict==6.1.0
 propcache==0.2.1
+Pygments==2.19.1
 python-dotenv==1.0.1
+rich==13.9.4
 yarl==1.18.3

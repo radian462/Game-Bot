@@ -24,20 +24,23 @@ GAME_NOT_EXIST_MSG: final = "ゲームが存在しません"
 ERROR_TEMPLATE: final = "エラーが発生しました\n"
 
 
+logger = make_logger("System")
+
+
 @client.event
 async def on_ready():
     await tree.sync()
-    print("ログインしました")
+    logger.info(f"ログインしました")
 
 
 class JoinView(discord.ui.View):
     def __init__(self, id: str, timeout: int | None = None):
         super().__init__(timeout=timeout)
         self.id = id
-        self.logger = make_logger(__name__)
 
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
+        logger.info(f"{interaction.user.id} clicked join button.")
         try:
             self.game = werewolf_manager.games[self.id]
             if interaction.user.id not in self.game["participants"]:
@@ -45,7 +48,7 @@ class JoinView(discord.ui.View):
                     await interaction.response.send_message(
                         LIMIT_PLAYER_MSG, ephemeral=True
                     )
-                    self.logger.info(
+                    logger.info(
                         f"{interaction.user.id} could not join the game for limit."
                     )
                     return
@@ -54,7 +57,7 @@ class JoinView(discord.ui.View):
                     werewolf_manager.games[self.id]["participants"].add(
                         interaction.user.id
                     )
-                    self.logger.info(f"{interaction.user.id} joined the game.")
+                    logger.info(f"{interaction.user.id} joined the game.")
                 else:
                     await interaction.response.send_message(
                         HOST_JOIN_MSG, ephemeral=True
@@ -68,11 +71,12 @@ class JoinView(discord.ui.View):
                 )
         except Exception as e:
             traceback.print_exc()
-            self.logger.debug(self.game)
+            logger.debug(self.game)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
+        logger.info(f"{interaction.user.id} clicked leave button.")
         try:
             self.game = werewolf_manager.games[self.id]
             if interaction.user.id in self.game["participants"]:
@@ -81,7 +85,7 @@ class JoinView(discord.ui.View):
                         interaction.user.id
                     )
 
-                self.logger.info(f"{interaction.user.id} leaved the game.")
+                logger.info(f"{interaction.user.id} leaved the game.")
                 await update_recruiting_embed(self.id, interaction)
             elif interaction.user.id == self.game["host"]:
                 await interaction.response.send_message(HOST_LEAVE_MSG, ephemeral=True)
@@ -89,11 +93,12 @@ class JoinView(discord.ui.View):
                 await interaction.response.send_message(NOT_PLAYER_MSG, ephemeral=True)
         except Exception as e:
             traceback.print_exc()
-            self.logger.debug(self.game)
+            logger.debug(self.game)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
+        logger.info(f"{interaction.user.id} clicked start button.")
         self.game = werewolf_manager.games[self.id]
         if interaction.user.id == self.game["host"]:
             await update_recruiting_embed(self.id, interaction, show_view=False)
@@ -103,6 +108,7 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
     async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
+        logger.info(f"{interaction.user.id} clicked end button.")
         try:
             if interaction.user.id == werewolf_manager.games[self.id]["host"]:
                 embed = discord.Embed(
@@ -114,14 +120,14 @@ class JoinView(discord.ui.View):
                 await interaction.response.edit_message(embed=embed, view=None)
                 del werewolf_manager.games[self.id]
 
-                self.logger.info(
+                logger.info(
                     f"{interaction.user.id} canceled the game of {self.id}."
                 )
             else:
                 await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
         except Exception as e:
             traceback.print_exc()
-            self.logger.debug(self.game)
+            logger.debug(self.game)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     """
@@ -212,6 +218,7 @@ async def update_recruiting_embed(
 )
 @discord.app_commands.guild_only()
 async def werewolf(interaction: discord.Interaction, limit: int = 10):
+    logger.info(f"{interaction.user.id} created a game.")
     try:
         view = JoinView(id=interaction.id, timeout=None)
 
@@ -244,6 +251,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
 )
 @discord.app_commands.guild_only()
 async def set_role(interaction: discord.Interaction, role: str, number: int):
+    logger.info(f"{interaction.user.id} set {role} to {number}.")
     try:
         # 現在の募集中のゲームを取得
         host_game_list = [
