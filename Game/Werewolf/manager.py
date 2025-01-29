@@ -45,7 +45,10 @@ class RoleInfoView(discord.ui.View):
 
 class PlayerChoiceView(discord.ui.View):
     def __init__(
-        self, choices: list[player.Player], process: Literal["Execute", "Ability"], allow_skip: bool = False
+        self,
+        choices: list[player.Player],
+        process: Literal["Execute", "Ability"],
+        allow_skip: bool = False,
     ) -> None:
         super().__init__()
         self.choices = choices
@@ -60,10 +63,15 @@ class PlayerChoiceView(discord.ui.View):
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
         self.add_item(GenericSelect(self.options, self.choices, self.process))
-       
+
 
 class GenericSelect(Select):
-    def __init__(self, options: list[discord.SelectOption], players: list[player.Player], process: Literal["Execute", "Ability"]):
+    def __init__(
+        self,
+        options: list[discord.SelectOption],
+        players: list[player.Player],
+        process: Literal["Execute", "Ability"],
+    ):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
         self.players = players
         self.votes = {}
@@ -74,7 +82,9 @@ class GenericSelect(Select):
             alive_player_ids = (p.id for p in self.players if p.is_alive)
 
             if interaction.user.id in self.view.votes:
-                await interaction.response.send_message("既に投票済みです", ephemeral=True)
+                await interaction.response.send_message(
+                    "既に投票済みです", ephemeral=True
+                )
                 return
 
             if interaction.user.id not in alive_player_ids:
@@ -98,7 +108,6 @@ class GenericSelect(Select):
             if len(self.view.votes) == len(self.players):
                 await interaction.message.edit(view=None)
                 self.view.stop()
-
 
         elif self.process == "Ability":
             selected_user_id = int(self.values[0]) if self.values[0] != "skip" else None
@@ -196,11 +205,8 @@ class WerewolfManager:
                 title="キル投票", description="襲撃対象を選んでください"
             )
             view = PlayerChoiceView(
-                choices=self.alive_players,
-                process="Ability",
-                allow_skip=False
+                choices=self.alive_players, process="Ability", allow_skip=False
             )
-
 
             message = await player.message(embed=embed, view=view)
             await view.wait()
@@ -258,11 +264,8 @@ class WerewolfManager:
     async def execute_vote(self) -> None:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = PlayerChoiceView(
-            choices=self.alive_players,
-            process="Execute",
-            allow_skip=True
+            choices=self.alive_players, process="Execute", allow_skip=True
         )
-
 
         message = await self.channel.send(embed=embed, view=view)
         await view.wait()
