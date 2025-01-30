@@ -72,7 +72,9 @@ class PlayerChoiceView(discord.ui.View):
         if allow_skip:
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
-        self.add_item(self.GenericSelect(self.options, self.choices, self.process, self.game_id))
+        self.add_item(
+            self.GenericSelect(self.options, self.choices, self.process, self.game_id)
+        )
 
 
 class GenericSelect(Select):
@@ -91,52 +93,57 @@ class GenericSelect(Select):
         self.t = g.translators[game_id]
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        self.logger.info(f"{interaction.user.id} selected {self.values[0]}")
+        if self.values:
+            self.logger.info(f"{interaction.user.id} selected {self.values[0]}")
 
-        if self.process == "Execute":
-            alive_player_ids = (p.id for p in self.players if p.is_alive)
+            if self.process == "Execute":
+                alive_player_ids = (p.id for p in self.players if p.is_alive)
 
-            if interaction.user.id in self.view.votes:
-                await interaction.response.send_message(
-                    "既に投票済みです", ephemeral=True
-                )
-                return
-            if interaction.user.id not in alive_player_ids:
-                await interaction.response.send_message(
-                    "生存しているプレイヤーだけが投票できます", ephemeral=True
-                )
-                return
-            if self.values[0] == "skip":
-                selected_user_id = None
-                await interaction.response.send_message(
-                    "スキップしました。", ephemeral=True
-                )
-            else:
-                selected_user_id = int(self.values[0])
-                await interaction.response.send_message(
-                    f"<@!{selected_user_id}> に投票しました。", ephemeral=True
-                )
-            self.view.votes[interaction.user.id] = selected_user_id
+                if interaction.user.id in self.view.votes:
+                    await interaction.response.send_message(
+                        "既に投票済みです", ephemeral=True
+                    )
+                    return
+                if interaction.user.id not in alive_player_ids:
+                    await interaction.response.send_message(
+                        "生存しているプレイヤーだけが投票できます", ephemeral=True
+                    )
+                    return
+                if self.values[0] == "skip":
+                    selected_user_id = None
+                    await interaction.response.send_message(
+                        "スキップしました。", ephemeral=True
+                    )
+                else:
+                    selected_user_id = int(self.values[0])
+                    await interaction.response.send_message(
+                        f"<@!{selected_user_id}> に投票しました。", ephemeral=True
+                    )
+                self.view.votes[interaction.user.id] = selected_user_id
 
-            if len(self.view.votes) == len(self.players):
+                if len(self.view.votes) == len(self.players):
+                    await interaction.message.edit(view=None)
+                    self.view.stop()
+
+            elif self.process == "Ability":
+                selected_user_id = (
+                    int(self.values[0]) if self.values[0] != "skip" else None
+                )
+                self.view.votes[interaction.user.id] = selected_user_id
+
+                if selected_user_id is not None:
+                    await interaction.response.send_message(
+                        f"<@!{selected_user_id}> に投票しました。", ephemeral=True
+                    )
+                else:
+                    await interaction.response.send_message(
+                        "スキップしました。", ephemeral=True
+                    )
+
                 await interaction.message.edit(view=None)
                 self.view.stop()
-
-        elif self.process == "Ability":
-            selected_user_id = int(self.values[0]) if self.values[0] != "skip" else None
-            self.view.votes[interaction.user.id] = selected_user_id
-
-            if selected_user_id is not None:
-                await interaction.response.send_message(
-                    f"<@!{selected_user_id}> に投票しました。", ephemeral=True
-                )
-            else:
-                await interaction.response.send_message(
-                    "スキップしました。", ephemeral=True
-                )
-
-            await interaction.message.edit(view=None)
-            self.view.stop()
+        else:
+            self.logger.warning(f"Not selected by {interaction.user.id}")
 
 
 class WerewolfManager:
@@ -228,7 +235,10 @@ class WerewolfManager:
                 title="キル投票", description="襲撃対象を選んでください"
             )
             view = PlayerChoiceView(
-                choices=self.alive_players, process="Ability", allow_skip=False, game_id=self.id
+                choices=self.alive_players,
+                process="Ability",
+                allow_skip=False,
+                game_id=self.id,
             )
 
             message = await player.message(embed=embed, view=view)
@@ -252,7 +262,9 @@ class WerewolfManager:
         if modes:
             chosen_mode = random.choice(modes)
 
-        target_players = [p for p in self.last_alive_players if p.id == chosen_mode][0]
+        target_players = next(
+            [p for p in self.last_alive_players if p.id == chosen_mode][0], None
+        )
         target_players.kill()
 
         for p in alive_werewolf_players:
@@ -287,7 +299,10 @@ class WerewolfManager:
     async def execute_vote(self) -> None:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = PlayerChoiceView(
-            choices=self.alive_players, process="Execute", allow_skip=True, game_id=self.id
+            choices=self.alive_players,
+            process="Execute",
+            allow_skip=True,
+            game_id=self.id,
         )
 
         message = await self.channel.send(embed=embed, view=view)
@@ -304,8 +319,8 @@ class WerewolfManager:
             most_common = counter.most_common()
             max_count = most_common[0][1]
             result_candidates = [k for k, v in most_common if v == max_count]
-            execute_target = (
-                result_candidates[0] if len(result_candidates) == 1 else None
+            execute_target = next(
+                (result_candidates[0] if len(result_candidates) == 1 else None), None
             )
 
         if execute_target is None:
