@@ -73,7 +73,7 @@ class PlayerChoiceView(discord.ui.View):
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
         self.add_item(
-            self.GenericSelect(self.options, self.choices, self.process, self.game_id)
+            GenericSelect(self.options, self.choices, self.process, self.game_id)
         )
 
 
@@ -262,9 +262,8 @@ class WerewolfManager:
         if modes:
             chosen_mode = random.choice(modes)
 
-        target_players = next(
-            [p for p in self.last_alive_players if p.id == chosen_mode][0], None
-        )
+        target_players = [p for p in self.last_alive_players if p.id == chosen_mode][0]
+        
         target_players.kill()
 
         for p in alive_werewolf_players:
@@ -319,9 +318,8 @@ class WerewolfManager:
             most_common = counter.most_common()
             max_count = most_common[0][1]
             result_candidates = [k for k, v in most_common if v == max_count]
-            execute_target = next(
-                (result_candidates[0] if len(result_candidates) == 1 else None), None
-            )
+            execute_target = (result_candidates[0] if len(result_candidates) == 1 else None)
+            
 
         if execute_target is None:
             await self.channel.send(f"誰も処刑されませんでした。")
@@ -365,3 +363,15 @@ class WerewolfManager:
         await self.channel.send(embed=embed)
 
         self.logger.info(f"Game has ended. Winners: {self.winner}")
+
+        result_embed = discord.Embed(
+            title="人狼ゲーム",
+            color=0xFFD700,
+        )
+        result_embed.add_field(
+            name="最終結果",
+            value="\n".join(f"<@!{p.id}> {self.t.getstring(p.status)} - {self.t.getstring(p.role.name)}" for p in self.players),
+            inline=False,
+        )
+        await self.channel.send(embed=result_embed)
+

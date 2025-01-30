@@ -19,4 +19,7 @@ TeamVillager,村人陣営
 TeamWerewolf,人狼陣営
 TeamNeutral,第三陣営
 
-# 
+# 状態
+Alive,生存
+Executed,追放
+Killed,殺害
