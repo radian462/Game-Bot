@@ -13,32 +13,35 @@ from Modules.translator import Translator
 
 
 class RoleInfoView(discord.ui.View):
-    def __init__(self, players: list, timeout: int | None = None):
+    def __init__(self, players: list, game_id: int, timeout: int | None = None):
         super().__init__(timeout=timeout)
         self.players = players
+        self.logger = g.loggers[game_id]
+        self.t = g.translators[game_id]
 
     @discord.ui.button(emoji="ℹ️", style=discord.ButtonStyle.gray)
     async def InfoButton(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         player_role = [p.role for p in self.players if interaction.user.id == p.id][0]
+
         embed = discord.Embed(
-            title=player_role.name,
+            title=self.t.getstring(player_role.name),
             color=discord.Color.green(),
         )
         embed.add_field(
             name="陣営",
-            value=player_role.team,
+            value=self.t.getstring(player_role.team),
             inline=False,
         )
         embed.add_field(
             name="勝利条件",
-            value=player_role.win_condition,
+            value=self.t.getstring(player_role.win_condition),
             inline=False,
         )
         embed.add_field(
             name="説明",
-            value=player_role.description,
+            value=self.t.getstring(player_role.description),
             inline=False,
         )
 
@@ -50,6 +53,7 @@ class PlayerChoiceView(discord.ui.View):
         self,
         choices: list[player.Player],
         process: Literal["Execute", "Ability"],
+        game_id: int,
         allow_skip: bool = False,
     ) -> None:
         super().__init__()
@@ -61,10 +65,14 @@ class PlayerChoiceView(discord.ui.View):
             for choice in self.choices
         ]
 
+        self.game_id = game_id
+        self.logger = g.loggers[game_id]
+        self.t = g.translators[game_id]
+
         if allow_skip:
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
-        self.add_item(GenericSelect(self.options, self.choices, self.process))
+        self.add_item(self.GenericSelect(self.options, self.choices, self.process, self.game_id))
 
 
 class GenericSelect(Select):
@@ -73,13 +81,18 @@ class GenericSelect(Select):
         options: list[discord.SelectOption],
         players: list[player.Player],
         process: Literal["Execute", "Ability"],
+        game_id: int,
     ):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
         self.players = players
         self.votes = {}
         self.process = process
+        self.logger = g.loggers[game_id]
+        self.t = g.translators[game_id]
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        self.logger.info(f"{interaction.user.id} selected {self.values[0]}")
+
         if self.process == "Execute":
             alive_player_ids = (p.id for p in self.players if p.is_alive)
 
@@ -88,7 +101,6 @@ class GenericSelect(Select):
                     "既に投票済みです", ephemeral=True
                 )
                 return
-
             if interaction.user.id not in alive_player_ids:
                 await interaction.response.send_message(
                     "生存しているプレイヤーだけが投票できます", ephemeral=True
@@ -104,7 +116,6 @@ class GenericSelect(Select):
                 await interaction.response.send_message(
                     f"<@!{selected_user_id}> に投票しました。", ephemeral=True
                 )
-
             self.view.votes[interaction.user.id] = selected_user_id
 
             if len(self.view.votes) == len(self.players):
@@ -147,7 +158,7 @@ class WerewolfManager:
 
         self.lang = "ja"
         self.t = g.translators[self.id]
-        self.logger = make_logger("Werewolf", self.id)
+        self.logger = g.loggers[self.id]
 
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
@@ -157,10 +168,12 @@ class WerewolfManager:
 
         players_ids = [self.game["host"]] + list(self.game["participants"])
         self.players = []
+
         for id in players_ids:
             p = player.Player(id, self.client)
             await p.initialize()
             self.players.append(p)
+
         self.alive_players = self.players
         self.last_alive_players = self.players
 
@@ -177,7 +190,7 @@ class WerewolfManager:
             self.players[i].assign_role(r)
             self.logger.info(f"{self.players[i].id} has been assigned {r.name}")
 
-        role_info_view = RoleInfoView(self.players)
+        role_info_view = RoleInfoView(self.players, self.id)
         for p in self.players:
             await p.message(
                 f"あなたの役職は{self.t.getstring(p.role.name)}です",
@@ -215,7 +228,7 @@ class WerewolfManager:
                 title="キル投票", description="襲撃対象を選んでください"
             )
             view = PlayerChoiceView(
-                choices=self.alive_players, process="Ability", allow_skip=False
+                choices=self.alive_players, process="Ability", allow_skip=False, game_id=self.id
             )
 
             message = await player.message(embed=embed, view=view)
@@ -274,7 +287,7 @@ class WerewolfManager:
     async def execute_vote(self) -> None:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = PlayerChoiceView(
-            choices=self.alive_players, process="Execute", allow_skip=True
+            choices=self.alive_players, process="Execute", allow_skip=True, game_id=self.id
         )
 
         message = await self.channel.send(embed=embed, view=view)

@@ -28,6 +28,7 @@ ERROR_TEMPLATE: final = "エラーが発生しました\n"
 
 logger = make_logger("System")
 g.translators = {}
+g.loggers = {}
 
 
 @client.event
@@ -166,6 +167,7 @@ class WerewolfManager:
         }
 
         g.translators[game_id] = self.t
+        g.loggers[game_id] = make_logger("Werewolf", game_id)
 
         return game_id
 
