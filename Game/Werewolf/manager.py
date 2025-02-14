@@ -33,9 +33,7 @@ class WerewolfManager:
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
 
-    async def game_start(self) -> None:
-        self.logger.info("Game has started.")
-
+    async def _create_player_instances(self) -> None:
         players_ids = [self.game["host"]] + list(self.game["participants"])
         self.players = []
 
@@ -44,9 +42,7 @@ class WerewolfManager:
             await p.initialize()
             self.players.append(p)
 
-        self.alive_players = self.players
-        self.last_alive_players = self.players
-
+    def _assign_roles(self) -> None:
         self.available_roles = [
             r for r, count in self.game["roles"].items() for _ in range(count)
         ]
@@ -60,12 +56,22 @@ class WerewolfManager:
             self.players[i].assign_role(r)
             self.logger.info(f"{self.players[i].id} has been assigned {r.name}")
 
+    async def _notify_roles(self) -> None:
         role_info_view = RoleInfoView(self.players, self.id)
         for p in self.players:
             await p.message(
                 f"あなたの役職は{self.t.getstring(p.role.name)}です",
                 view=role_info_view,
             )
+
+    async def game_start(self) -> None:
+        self.logger.info("Game has started.")
+        await self._create_player_instances()
+        self.alive_players = self.players
+        self.last_alive_players = self.players
+
+        self._assign_roles()
+        await self._notify_roles()
 
     # 以下夜の処理
     async def night(self) -> None:
