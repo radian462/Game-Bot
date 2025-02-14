@@ -4,8 +4,9 @@ import discord
 from discord.ui import Select, View
 
 import Modules.global_value as g
-from Modules.translator import Translator
 from Game.Werewolf import player, role
+from Modules.translator import Translator
+
 
 class RoleInfoView(discord.ui.View):
     def __init__(self, players: list, game_id: int, timeout: int | None = None):
@@ -139,5 +140,3 @@ class GenericSelect(Select):
                 self.view.stop()
         else:
             self.logger.warning(f"Not selected by {interaction.user.id}")
-
-
