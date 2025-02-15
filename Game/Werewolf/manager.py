@@ -45,7 +45,8 @@ class WerewolfManager:
         self.t = g.translators[self.id]
         self.logger = g.loggers[self.id]
 
-        g.games[game["id"]] = Game(id=game["id"], roles=game["roles"])
+        self.game = Game(id=game["id"], roles=game["roles"])
+        g.games[game["id"]] = self.game
 
     async def _create_player_instances(self) -> None:
         players_ids = [self.host] + list(self.participants)

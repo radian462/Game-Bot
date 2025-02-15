@@ -54,7 +54,7 @@ class PlayerChoiceView(discord.ui.View):
     ) -> None:
         super().__init__()
         self.choices = choices
-        self.votes = {}
+        self.votes: dict[int, int] = {}
         self.process = process
         self.options = [
             discord.SelectOption(label=choice.name, value=choice.id)
@@ -83,7 +83,7 @@ class GenericSelect(Select):
     ):
         super().__init__(placeholder="プレイヤーを選択してください...", options=options)
         self.players = players
-        self.votes = {}
+        self.votes: dict[int, int] = {}
         self.process = process
         self.logger = g.loggers[game_id]
         self.t = g.translators[game_id]

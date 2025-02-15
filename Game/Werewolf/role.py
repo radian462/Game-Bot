@@ -1,8 +1,8 @@
 import tomllib
-from typing import final
+from typing import Final
 
 with open("Resources/role_description.toml", "rb") as f:
-    ROLE_DESCRIPTIONS: final = tomllib.load(f)
+    ROLE_DESCRIPTIONS: Final = tomllib.load(f)
 
 
 class Role:

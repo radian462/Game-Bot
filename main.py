@@ -1,6 +1,6 @@
 import os
 import traceback
-from typing import final
+from typing import Final
 
 import discord
 from discord import app_commands
@@ -15,15 +15,15 @@ from Modules.translator import Translator
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
-NOT_HOST_MSG: final = "あなたは募集者ではありません"
-NOT_PLAYER_MSG: final = "あなたは参加していません"
-ALREADY_PLAYER_MSG: final = "すでに参加しています"
-LIMIT_PLAYER_MSG: final = "人数制限に達しました"
-HOST_JOIN_MSG: final = "募集者は参加できません"
-HOST_LEAVE_MSG: final = "募集者は退出できません"
-GAME_NOT_EXIST_MSG: final = "ゲームが存在しません"
+NOT_HOST_MSG: Final = "あなたは募集者ではありません"
+NOT_PLAYER_MSG: Final = "あなたは参加していません"
+ALREADY_PLAYER_MSG: Final = "すでに参加しています"
+LIMIT_PLAYER_MSG: Final = "人数制限に達しました"
+HOST_JOIN_MSG: Final = "募集者は参加できません"
+HOST_LEAVE_MSG: Final = "募集者は退出できません"
+GAME_NOT_EXIST_MSG: Final = "ゲームが存在しません"
 
-ERROR_TEMPLATE: final = "エラーが発生しました\n"
+ERROR_TEMPLATE: Final = "エラーが発生しました\n"
 
 
 logger = make_logger("System")

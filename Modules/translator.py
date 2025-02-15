@@ -10,7 +10,7 @@ class Translator:
     def __init__(self, lang: str = "ja"):
         self.lang = lang
         self.file_path = "Resources/Translate.csv"
-        self.translations = {}
+        self.translations: dict[str, str] = {}
         self._load()
 
     def _load(self):
