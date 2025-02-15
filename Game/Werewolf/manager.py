@@ -1,5 +1,5 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import random
 from collections import Counter
 
@@ -17,11 +17,11 @@ class Game:
     id: int = 0
     turns: int = 0
 
-    players: list[player.Player] = []
-    alive_players: list[player.Player] = []
-    last_alive_players: list[player.Player] = []
-    roles: dict[role.Role, int] = {}
-    assigned_roles: list[role.Role] = []
+    players: list[player.Player] = field(default_factory=list)
+    alive_players: list[player.Player] = field(default_factory=list)
+    last_alive_players: list[player.Player] = field(default_factory=list)
+    roles: dict[role.Role, int] = field(default_factory=dict)
+    assigned_roles: list[role.Role] = field(default_factory=list)
 
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
@@ -71,11 +71,11 @@ class WerewolfManager:
 
         for i, r in enumerate(self.game.assigned_roles):
             self.game.players[i].assign_role(r)
-            self.logger.info(f"{self.players[i].id} has been assigned {r.name}")
+            self.logger.info(f"{self.game.players[i].id} has been assigned {r.name}")
 
     async def _notify_roles(self) -> None:
         role_info_view = RoleInfoView(self.game.players, self.id)
-        for p in self.players:
+        for p in self.game.players:
             await p.message(
                 f"あなたの役職は{self.t.getstring(p.role.name)}です",
                 view=role_info_view,
@@ -119,18 +119,19 @@ class WerewolfManager:
                 title="キル投票", description="襲撃対象を選んでください"
             )
             view = PlayerChoiceView(
-                choices=self.alive_players,
+                choices=alive_not_werewolf_players,
                 process="Ability",
                 allow_skip=False,
                 game_id=self.id,
             )
 
-            message = await player.message(embed=embed, view=view)
+            await player.message(embed=embed, view=view)
             await view.wait()
 
             return list(view.votes.values())[0]
 
         alive_werewolf_players = [p for p in self.game.alive_players if p.role.is_werewolf]
+        alive_not_werewolf_players = [p for p in self.game.alive_players if not p.role.is_werewolf]
 
         tasks = []
         for p in alive_werewolf_players:
@@ -182,7 +183,7 @@ class WerewolfManager:
     async def execute_vote(self) -> None:
         embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
         view = PlayerChoiceView(
-            choices=self.alive_players,
+            choices=self.game.alive_players,
             process="Execute",
             allow_skip=True,
             game_id=self.id,
@@ -216,7 +217,7 @@ class WerewolfManager:
             await self.channel.send(f"<@!{target_player.id}> が処刑されました。")
             self.logger.info(f"{target_player.id} was executed.")
 
-        self.last_alive_players = self.alive_players
+        self.last_alive_players = self.game.alive_players
 
     # 以下ゲーム終了処理
     def win_check(self) -> bool:
@@ -257,7 +258,7 @@ class WerewolfManager:
             name="最終結果",
             value="\n".join(
                 f"<@!{p.id}> {self.t.getstring(p.status)} - {self.t.getstring(p.role.name)}"
-                for p in self.players
+                for p in self.game.players
             ),
             inline=False,
         )
