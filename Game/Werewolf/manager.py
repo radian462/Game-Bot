@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 import random
 from collections import Counter
 
@@ -8,20 +9,34 @@ import Modules.global_value as g
 from Game.Werewolf import player, role
 from Game.Werewolf.view import PlayerChoiceView, RoleInfoView
 
+g.games = {}
+
+
+@dataclass
+class Game:
+    id: int = 0
+    turns: int = 0
+
+    players: list[player.Player] = []
+    alive_players: list[player.Player] = []
+    last_alive_players: list[player.Player] = []
+    roles: dict[role.Role, int] = {}
+    assigned_roles: list[role.Role] = []
+
+    def refresh_alive_players(self):
+        self.alive_players = [p for p in self.players if p.is_alive]
+
 
 class WerewolfManager:
     def __init__(self, game: dict, client: discord.Client):
         self.id = game["id"]
+        self.host = game["host"]
+        self.participants = game["participants"]
         self.client = client
-        self.game = game
-        self.roles = self.game["roles"]
-        self.available_roles = []
-        self.message_id = self.game["message_id"]
-        self.channel_id = self.game["channel_id"]
+        self.message_id = game["message_id"]
+        self.channel_id = game["channel_id"]
         self.channel = self.client.get_channel(self.channel_id)
 
-        self.players = []
-        self.alive_players = []
         self.winner = []
         self.win_team = []
         self.turns = 0
@@ -30,34 +45,36 @@ class WerewolfManager:
         self.t = g.translators[self.id]
         self.logger = g.loggers[self.id]
 
-    def refresh_alive_players(self):
-        self.alive_players = [p for p in self.players if p.is_alive]
+        g.games[game["id"]] = Game(id=game["id"], roles=game["roles"])
 
     async def _create_player_instances(self) -> None:
-        players_ids = [self.game["host"]] + list(self.game["participants"])
-        self.players = []
+        players_ids = [self.host] + list(self.participants)
 
         for id in players_ids:
             p = player.Player(id, self.client)
             await p.initialize()
-            self.players.append(p)
+            self.game.players.append(p)
+
+        self.game.refresh_alive_players()
+        self.game.last_alive_players = self.game.players
+
 
     def _assign_roles(self) -> None:
-        self.available_roles = [
-            r for r, count in self.game["roles"].items() for _ in range(count)
+        self.game.assigned_roles = [
+            r for r, count in self.game.roles.items() for _ in range(count)
         ]
 
-        while len(self.available_roles) < len(self.players):
-            self.available_roles.append(role.Villager())
+        while len(self.game.assigned_roles) < len(self.game.players):
+            self.game.assigned_roles.append(role.Villager())
 
-        random.shuffle(self.available_roles)
+        random.shuffle(self.game.assigned_roles)
 
-        for i, r in enumerate(self.available_roles):
-            self.players[i].assign_role(r)
+        for i, r in enumerate(self.game.assigned_roles):
+            self.game.players[i].assign_role(r)
             self.logger.info(f"{self.players[i].id} has been assigned {r.name}")
 
     async def _notify_roles(self) -> None:
-        role_info_view = RoleInfoView(self.players, self.id)
+        role_info_view = RoleInfoView(self.game.players, self.id)
         for p in self.players:
             await p.message(
                 f"あなたの役職は{self.t.getstring(p.role.name)}です",
@@ -67,8 +84,6 @@ class WerewolfManager:
     async def game_start(self) -> None:
         self.logger.info("Game has started.")
         await self._create_player_instances()
-        self.alive_players = self.players
-        self.last_alive_players = self.players
 
         self._assign_roles()
         await self._notify_roles()
@@ -83,17 +98,17 @@ class WerewolfManager:
 
         await self.night_ability_time()
 
-        if self.turns != 0:
+        if self.game.turns != 0:
             await self.kill_votes()
 
-        for p in self.last_alive_players:
+        for p in self.game.last_alive_players:
             await p.message(f"<#{self.channel.id}>に戻ってください")
 
-        self.turns += 1
+        self.game.turns += 1
 
     async def night_ability_time(self) -> None:
         tasks = []
-        for p in self.alive_players:
+        for p in self.game.alive_players:
             tasks.append(p.role.night_ability())
 
         await asyncio.gather(*tasks)
@@ -115,7 +130,7 @@ class WerewolfManager:
 
             return list(view.votes.values())[0]
 
-        alive_werewolf_players = [p for p in self.alive_players if p.role.is_werewolf]
+        alive_werewolf_players = [p for p in self.game.alive_players if p.role.is_werewolf]
 
         tasks = []
         for p in alive_werewolf_players:
@@ -131,22 +146,22 @@ class WerewolfManager:
         if modes:
             chosen_mode = random.choice(modes)
 
-        target_players = [p for p in self.last_alive_players if p.id == chosen_mode][0]
+        target_players = [p for p in self.game.last_alive_players if p.id == chosen_mode][0]
 
         target_players.kill()
 
         for p in alive_werewolf_players:
             await p.message(f"<@!{target_players.id}>を襲撃します")
 
-        self.refresh_alive_players()
+        self.game.refresh_alive_players()
         self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
 
     # 以下昼の処理
     async def day(self):
         today_killed_players = [
             player
-            for player in self.last_alive_players
-            if player not in self.alive_players
+            for player in self.game.last_alive_players
+            if player not in self.game.alive_players
         ]
 
         embed = discord.Embed(
@@ -195,9 +210,9 @@ class WerewolfManager:
             await self.channel.send(f"誰も処刑されませんでした。")
             self.logger.info(f"Nobody was executed.")
         else:
-            target_player = [p for p in self.alive_players if p.id == execute_target][0]
+            target_player = [p for p in self.game.alive_players if p.id == execute_target][0]
             target_player.execute()
-            self.refresh_alive_players()
+            self.game.refresh_alive_players()
             await self.channel.send(f"<@!{target_player.id}> が処刑されました。")
             self.logger.info(f"{target_player.id} was executed.")
 
@@ -206,14 +221,14 @@ class WerewolfManager:
     # 以下ゲーム終了処理
     def win_check(self) -> bool:
         if (
-            len([p for p in self.alive_players if p.role.is_werewolf])
-            >= len(self.alive_players) / 2
+            len([p for p in self.game.alive_players if p.role.is_werewolf])
+            >= len(self.game.alive_players) / 2
         ):
-            self.winner = [p for p in self.players if p.role.team == "TeamWerewolf"]
+            self.winner = [p for p in self.game.players if p.role.team == "TeamWerewolf"]
             self.win_team = "TeamWerewolf"
             return True
-        elif len([p for p in self.alive_players if p.role.is_werewolf]) == 0:
-            self.winner = [p for p in self.players if p.role.team == "TeamVillager"]
+        elif len([p for p in self.game.alive_players if p.role.is_werewolf]) == 0:
+            self.winner = [p for p in self.game.players if p.role.team == "TeamVillager"]
             self.win_team = "TeamVillager"
             return True
         else:
