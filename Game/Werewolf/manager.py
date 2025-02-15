@@ -39,7 +39,6 @@ class WerewolfManager:
 
         self.winner = []
         self.win_team = []
-        self.turns = 0
 
         self.lang = "ja"
         self.t = g.translators[self.id]
