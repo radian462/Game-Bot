@@ -1,7 +1,8 @@
 import asyncio
-from dataclasses import dataclass, field
 import random
 from collections import Counter
+from dataclasses import dataclass, field
+from typing import Optional
 
 import discord
 
@@ -22,6 +23,9 @@ class Game:
     last_alive_players: list[player.Player] = field(default_factory=list)
     roles: dict[role.Role, int] = field(default_factory=dict)
     assigned_roles: list[role.Role] = field(default_factory=list)
+
+    channel: Optional[discord.TextChannel] = field(default_factory=None)
+    client: Optional[discord.Client] = field(default_factory=None)
 
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
@@ -44,7 +48,9 @@ class WerewolfManager:
         self.t = g.translators[self.id]
         self.logger = g.loggers[self.id]
 
-        self.game = Game(id=game["id"], roles=game["roles"])
+        self.game = Game(
+            id=game["id"], roles=game["roles"], channel=self.channel, client=client
+        )
         g.games[game["id"]] = self.game
 
     async def _create_player_instances(self) -> None:
@@ -57,7 +63,6 @@ class WerewolfManager:
 
         self.game.refresh_alive_players()
         self.game.last_alive_players = self.game.players
-
 
     def _assign_roles(self) -> None:
         self.game.assigned_roles = [
@@ -81,81 +86,15 @@ class WerewolfManager:
                 view=role_info_view,
             )
 
+    async def night(self) -> None:
+        await NightManager(self.id).main()
+
     async def game_start(self) -> None:
         self.logger.info("Game has started.")
         await self._create_player_instances()
 
         self._assign_roles()
         await self._notify_roles()
-
-    # 以下夜の処理
-    async def night(self) -> None:
-        embed = discord.Embed(
-            title="人狼ゲーム",
-            description=f"夜になりました。プレイヤーは<@!{self.client.application_id}>のDMに移動してください。",
-        )
-        await self.channel.send(embed=embed)
-
-        await self.night_ability_time()
-
-        if self.game.turns != 0:
-            await self.kill_votes()
-
-        for p in self.game.last_alive_players:
-            await p.message(f"<#{self.channel.id}>に戻ってください")
-
-        self.game.turns += 1
-
-    async def night_ability_time(self) -> None:
-        tasks = []
-        for p in self.game.alive_players:
-            tasks.append(p.role.night_ability())
-
-        await asyncio.gather(*tasks)
-
-    async def kill_votes(self) -> None:
-        async def wait_for_vote(player: player.Player) -> int:
-            embed = discord.Embed(
-                title="キル投票", description="襲撃対象を選んでください"
-            )
-            view = PlayerChoiceView(
-                choices=alive_not_werewolf_players,
-                process="Ability",
-                allow_skip=False,
-                game_id=self.id,
-            )
-
-            await player.message(embed=embed, view=view)
-            await view.wait()
-
-            return list(view.votes.values())[0]
-
-        alive_werewolf_players = [p for p in self.game.alive_players if p.role.is_werewolf]
-        alive_not_werewolf_players = [p for p in self.game.alive_players if not p.role.is_werewolf]
-
-        tasks = []
-        for p in alive_werewolf_players:
-            tasks.append(wait_for_vote(p))
-
-        results = await asyncio.gather(*tasks)
-
-        counter = Counter(results)
-        modes = [
-            key for key, count in counter.items() if count == max(counter.values())
-        ]
-
-        if modes:
-            chosen_mode = random.choice(modes)
-
-        target_players = [p for p in self.game.last_alive_players if p.id == chosen_mode][0]
-
-        target_players.kill()
-
-        for p in alive_werewolf_players:
-            await p.message(f"<@!{target_players.id}>を襲撃します")
-
-        self.game.refresh_alive_players()
-        self.logger.info(f"Werewolfs {target_players.id} tried to kill a target.")
 
     # 以下昼の処理
     async def day(self):
@@ -211,7 +150,9 @@ class WerewolfManager:
             await self.channel.send(f"誰も処刑されませんでした。")
             self.logger.info(f"Nobody was executed.")
         else:
-            target_player = [p for p in self.game.alive_players if p.id == execute_target][0]
+            target_player = [
+                p for p in self.game.alive_players if p.id == execute_target
+            ][0]
             target_player.execute()
             self.game.refresh_alive_players()
             await self.channel.send(f"<@!{target_player.id}> が処刑されました。")
@@ -225,11 +166,15 @@ class WerewolfManager:
             len([p for p in self.game.alive_players if p.role.is_werewolf])
             >= len(self.game.alive_players) / 2
         ):
-            self.winner = [p for p in self.game.players if p.role.team == "TeamWerewolf"]
+            self.winner = [
+                p for p in self.game.players if p.role.team == "TeamWerewolf"
+            ]
             self.win_team = "TeamWerewolf"
             return True
         elif len([p for p in self.game.alive_players if p.role.is_werewolf]) == 0:
-            self.winner = [p for p in self.game.players if p.role.team == "TeamVillager"]
+            self.winner = [
+                p for p in self.game.players if p.role.team == "TeamVillager"
+            ]
             self.win_team = "TeamVillager"
             return True
         else:
@@ -263,3 +208,88 @@ class WerewolfManager:
             inline=False,
         )
         await self.channel.send(embed=result_embed)
+
+
+class NightManager:
+    def __init__(self, id: int) -> None:
+        self.id = id
+        self.game = g.games.get(id, None)
+        self.logger = g.loggers.get(id, None)
+
+        self.alive_werewolf_players: list[player.Player] = []
+        self.alive_not_werewolf_players: list[player.Player] = []
+
+    async def main(self) -> None:
+        await self._announce_night_start()
+        await self.night_ability_time()
+
+        if self.game.turns != 0:
+            results = await self.kill_votes()
+            target_player = self._decide_kill_target(results)
+            await self._announce_kill(target_player)
+            target_player.kill()
+            self.logger.info(f"Werewolfs {target_player.id} tried to kill a target.")
+
+        self.game.refresh_alive_players()
+
+        self.game.turns += 1
+        await self._announce_night_end()
+
+    async def _announce_night_start(self) -> None:
+        embed = discord.Embed(
+            title="人狼ゲーム",
+            description=f"夜になりました。プレイヤーは<@!{self.game.client.application_id}>のDMに移動してください。",
+        )
+        await self.game.channel.send(embed=embed)
+
+    async def _announce_night_end(self) -> None:
+        for p in self.game.last_alive_players:
+            await p.message(f"<#{self.game.channel.id}>に戻ってください")
+
+    async def _announce_kill(self, target_player) -> None:
+        for p in self.alive_werewolf_players:
+            await p.message(f"<@!{target_player.id}>を襲撃します")
+
+    async def night_ability_time(self) -> None:
+        tasks = [p.role.night_ability() for p in self.game.alive_players]
+
+        await asyncio.gather(*tasks)
+
+    def _decide_kill_target(self, results: list[int]) -> player.Player:
+        counter = Counter(results)
+        max_count = max(counter.values(), default=0)
+        modes = [key for key, count in counter.items() if count == max_count]
+
+        chosen_mode = random.choice(modes)
+        return next(p for p in self.game.last_alive_players if p.id == chosen_mode)
+
+    async def kill_votes(self) -> list[int]:
+        async def wait_for_vote(player: player.Player) -> int:
+            embed = discord.Embed(
+                title="キル投票", description="襲撃対象を選んでください"
+            )
+            view = PlayerChoiceView(
+                choices=self.alive_not_werewolf_players,
+                process="Ability",
+                allow_skip=False,
+                game_id=self.id,
+            )
+
+            await player.message(embed=embed, view=view)
+            await view.wait()
+
+            return list(view.votes.values())[0]
+
+        self.alive_werewolf_players = [
+            p for p in self.game.alive_players if p.role.is_werewolf
+        ]
+        self.alive_not_werewolf_players = [
+            p for p in self.game.alive_players if not p.role.is_werewolf
+        ]
+
+        tasks = []
+        for p in self.alive_werewolf_players:
+            tasks.append(wait_for_vote(p))
+
+        results = await asyncio.gather(*tasks)
+        return results
