@@ -9,6 +9,7 @@ import discord
 import Modules.global_value as g
 from Game.Werewolf import player, role
 from Game.Werewolf.view import PlayerChoiceView, RoleInfoView
+from Modules.logger import make_logger
 
 g.games = {}
 
@@ -24,8 +25,8 @@ class Game:
     roles: dict[role.Role, int] = field(default_factory=dict)
     assigned_roles: list[role.Role] = field(default_factory=list)
 
-    channel: Optional[discord.TextChannel] = field(default_factory=None)
-    client: Optional[discord.Client] = field(default_factory=None)
+    channel: Optional[discord.TextChannel] = None
+    client: Optional[discord.Client] = None
 
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
@@ -211,10 +212,10 @@ class WerewolfManager:
 
 
 class NightManager:
-    def __init__(self, id: int) -> None:
+    def __init__(self, id: Optional[int] = None) -> None:
         self.id = id
-        self.game = g.games.get(id, None)
-        self.logger = g.loggers.get(id, None)
+        self.game = g.games.get(id)
+        self.logger = make_logger("NightManager", id)
 
         self.alive_werewolf_players: list[player.Player] = []
         self.alive_not_werewolf_players: list[player.Player] = []
@@ -225,7 +226,8 @@ class NightManager:
 
         if self.game.turns != 0:
             results = await self.kill_votes()
-            target_player = self._decide_kill_target(results)
+            target_id = self._decide_kill_target(results)
+            target_player = next(p for p in self.game.last_alive_players if p.id == target_id)
             await self._announce_kill(target_player)
             target_player.kill()
             self.logger.info(f"Werewolfs {target_player.id} tried to kill a target.")
@@ -260,8 +262,7 @@ class NightManager:
         max_count = max(counter.values(), default=0)
         modes = [key for key, count in counter.items() if count == max_count]
 
-        chosen_mode = random.choice(modes)
-        return next(p for p in self.game.last_alive_players if p.id == chosen_mode)
+        return random.choice(modes)
 
     async def kill_votes(self) -> list[int]:
         async def wait_for_vote(player: player.Player) -> int:
