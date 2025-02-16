@@ -87,9 +87,6 @@ class WerewolfManager:
                 view=role_info_view,
             )
 
-    async def night(self) -> None:
-        await NightManager(self.id).main()
-
     async def game_start(self) -> None:
         self.logger.info("Game has started.")
         await self._create_player_instances()
@@ -97,69 +94,11 @@ class WerewolfManager:
         self._assign_roles()
         await self._notify_roles()
 
-    # 以下昼の処理
-    async def day(self):
-        today_killed_players = [
-            player
-            for player in self.game.last_alive_players
-            if player not in self.game.alive_players
-        ]
+    async def night(self) -> None:
+        await NightManager(self.id).main()
 
-        embed = discord.Embed(
-            title="人狼ゲーム",
-            description="朝になりました。議論を行い、誰を追放するか決めてください。",
-            color=0xFFFACD,
-        )
-        embed.add_field(
-            name="本日の死亡者",
-            value="\n".join([f"<@!{player.id}>" for player in today_killed_players])
-            or "なし",
-            inline=False,
-        )
-        await self.channel.send(embed=embed)
-
-        await self.execute_vote()
-
-    async def execute_vote(self) -> None:
-        embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
-        view = PlayerChoiceView(
-            choices=self.game.alive_players,
-            process="Execute",
-            allow_skip=True,
-            game_id=self.id,
-        )
-
-        message = await self.channel.send(embed=embed, view=view)
-        await view.wait()
-
-        filtered_votes = [v for v in view.votes.values()]
-        counter = Counter(filtered_votes)
-
-        if not counter:
-            execute_target = None
-        elif counter.get(None, 0) * 2 >= len(view.votes):
-            execute_target = None
-        else:
-            most_common = counter.most_common()
-            max_count = most_common[0][1]
-            result_candidates = [k for k, v in most_common if v == max_count]
-            execute_target = (
-                result_candidates[0] if len(result_candidates) == 1 else None
-            )
-
-        if execute_target is None:
-            await self.channel.send(f"誰も処刑されませんでした。")
-            self.logger.info(f"Nobody was executed.")
-        else:
-            target_player = [
-                p for p in self.game.alive_players if p.id == execute_target
-            ][0]
-            target_player.execute()
-            self.game.refresh_alive_players()
-            await self.channel.send(f"<@!{target_player.id}> が処刑されました。")
-            self.logger.info(f"{target_player.id} was executed.")
-
-        self.last_alive_players = self.game.alive_players
+    async def day(self) -> None:
+        await DayManager(self.id).main()
 
     # 以下ゲーム終了処理
     def win_check(self) -> bool:
@@ -294,3 +233,81 @@ class NightManager:
 
         results = await asyncio.gather(*tasks)
         return results
+
+class DayManager:
+    def __init__(self, id: Optional[int] = None) -> None:
+        self.id = id
+        self.game = g.games.get(id)
+        self.logger = make_logger("DayManager", id)
+
+        self.today_killed_players: list[player.Player] = []
+
+    async def main(self):
+        self.today_killed_players = [
+            player
+            for player in self.game.last_alive_players
+            if player not in self.game.alive_players
+        ]
+
+        await self._announce_day_start()
+        await self.execute_vote()
+
+    async def _announce_day_start(self) -> None:
+        embed = discord.Embed(
+            title="人狼ゲーム",
+            description="朝になりました。議論を行い、誰を追放するか決めてください。",
+            color=0xFFFACD,
+        )
+        embed.add_field(
+            name="本日の死亡者",
+            value="\n".join([f"<@!{player.id}>" for player in self.today_killed_players])
+            or "なし",
+            inline=False,
+        )
+        await self.channel.send(embed=embed)
+
+    def _decide_execute_target(self, results: list[int]) -> int | None:
+        counter = Counter(results)
+
+        if not counter:
+            execute_target = None
+        elif counter.get(None, 0) * 2 >= len(results):
+            execute_target = None
+        else:
+            most_common = counter.most_common()
+            max_count = most_common[0][1]
+            result_candidates = [k for k, v in most_common if v == max_count]
+            execute_target = (
+                result_candidates[0] if len(result_candidates) == 1 else None
+            )
+        
+        return execute_target
+
+    async def execute_vote(self) -> None:
+        embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
+        view = PlayerChoiceView(
+            choices=self.game.alive_players,
+            process="Execute",
+            allow_skip=True,
+            game_id=self.id,
+        )
+
+        await self.game.channel.send(embed=embed, view=view)
+        await view.wait()
+
+        filtered_votes = [v for v in view.votes.values()]
+        execute_id = self._decide_execute_target(filtered_votes)
+
+        if execute_id is None:
+            await self.channel.send(f"誰も処刑されませんでした。")
+            self.logger.info(f"Nobody was executed.")
+        else:
+            target_player = [
+                p for p in self.game.alive_players if p.id == execute_id
+            ][0]
+            target_player.execute()
+            self.game.refresh_alive_players()
+            await self.game.channel.send(f"<@!{target_player.id}> が処刑されました。")
+            self.logger.info(f"{target_player.id} was executed.")
+
+        self.game.last_alive_players = self.game.alive_players
