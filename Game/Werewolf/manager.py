@@ -102,6 +102,11 @@ class WerewolfManager:
 
     # 以下ゲーム終了処理
     def win_check(self) -> bool:
+        '''
+        人狼人数が生存者の半数を上回った場合、人狼勝利
+        人狼が一人もいなくなった場合、村人勝利
+        それ以外の場合、ゲーム続行
+        '''
         if (
             len([p for p in self.game.alive_players if p.role.is_werewolf])
             >= len(self.game.alive_players) / 2
