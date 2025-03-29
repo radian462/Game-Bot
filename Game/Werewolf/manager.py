@@ -100,59 +100,8 @@ class WerewolfManager:
     async def day(self) -> None:
         await DayManager(self.id).main()
 
-    # 以下ゲーム終了処理
-    def win_check(self) -> bool:
-        '''
-        人狼人数が生存者の半数を上回った場合、人狼勝利
-        人狼が一人もいなくなった場合、村人勝利
-        それ以外の場合、ゲーム続行
-        '''
-        if (
-            len([p for p in self.game.alive_players if p.role.is_werewolf])
-            >= len(self.game.alive_players) / 2
-        ):
-            self.winner = [
-                p for p in self.game.players if p.role.team == "TeamWerewolf"
-            ]
-            self.win_team = "TeamWerewolf"
-            return True
-        elif len([p for p in self.game.alive_players if p.role.is_werewolf]) == 0:
-            self.winner = [
-                p for p in self.game.players if p.role.team == "TeamVillager"
-            ]
-            self.win_team = "TeamVillager"
-            return True
-        else:
-            return False
-
     async def game_end(self) -> None:
-        embed = discord.Embed(
-            title="人狼ゲーム",
-            description=f"{self.t.getstring(self.win_team)}勝利",
-            color=0xFFD700,
-        )
-        embed.add_field(
-            name="勝者",
-            value="\n".join([f"<@!{player.id}>" for player in self.winner]),
-            inline=False,
-        )
-        await self.channel.send(embed=embed)
-
-        self.logger.info(f"Game has ended. Winners: {self.winner}")
-
-        result_embed = discord.Embed(
-            title="人狼ゲーム",
-            color=0xFFD700,
-        )
-        result_embed.add_field(
-            name="最終結果",
-            value="\n".join(
-                f"<@!{p.id}> {self.t.getstring(p.status)} - {self.t.getstring(p.role.name)}"
-                for p in self.game.players
-            ),
-            inline=False,
-        )
-        await self.channel.send(embed=result_embed)
+        await EndManager(self.id).main()
 
 
 class NightManager:
@@ -269,7 +218,7 @@ class DayManager:
             or "なし",
             inline=False,
         )
-        await self.channel.send(embed=embed)
+        await self.game.channel.send(embed=embed)
 
     def _decide_execute_target(self, results: list[int]) -> int | None:
         counter = Counter(results)
@@ -304,7 +253,7 @@ class DayManager:
         execute_id = self._decide_execute_target(filtered_votes)
 
         if execute_id is None:
-            await self.channel.send(f"誰も処刑されませんでした。")
+            await self.game.channel.send(f"誰も処刑されませんでした。")
             self.logger.info(f"Nobody was executed.")
         else:
             target_player = [
@@ -316,3 +265,75 @@ class DayManager:
             self.logger.info(f"{target_player.id} was executed.")
 
         self.game.last_alive_players = self.game.alive_players
+
+class EndManager:
+    def __init__(self, id: Optional[int] = None) -> None:
+        self.id = id
+        self.game = g.games.get(id)
+        self.logger = make_logger("EndManager", id)
+
+    async def main(self) -> None:
+        if self._win_check():
+            await self._send_result()
+
+    def _win_check(self) -> bool:
+        '''
+        人狼人数が生存者の半数を上回った場合、人狼勝利
+        人狼が一人もいなくなった場合、村人勝利
+        それ以外の場合、ゲーム続行
+        '''
+        if self._is_werewolf_win():
+            self.win_team = "TeamWerewolf"
+            return True
+        elif self._is_villager_win():
+            self.winner = [
+                p for p in self.game.players if p.role.team == "TeamVillager"
+            ]
+            self.win_team = "TeamVillager"
+            return True
+        else:
+            return False
+        
+    def _is_werewolf_win(self) -> bool:
+        if (
+            len([p for p in self.game.alive_players if p.role.is_werewolf])
+            >= len(self.game.alive_players) / 2
+        ):
+            return True
+        else:
+            return False
+        
+    def _is_villager_win(self) -> bool:
+        if len([p for p in self.game.alive_players if p.role.is_werewolf]) == 0:
+            return True
+        else:
+            return False
+        
+    async def _send_result(self) -> None:
+        embed = discord.Embed(
+            title="人狼ゲーム",
+            description=f"{self.t.getstring(self.win_team)}勝利",
+            color=0xFFD700,
+        )
+        embed.add_field(
+            name="勝者",
+            value="\n".join([f"<@!{player.id}>" for player in self.winner]),
+            inline=False,
+        )
+        await self.game.channel.send(embed=embed)
+
+        self.logger.info(f"Game has ended. Winners: {self.winner}")
+
+        result_embed = discord.Embed(
+            title="人狼ゲーム",
+            color=0xFFD700,
+        )
+        result_embed.add_field(
+            name="最終結果",
+            value="\n".join(
+                f"<@!{p.id}> {self.t.getstring(p.status)} - {self.t.getstring(p.role.name)}"
+                for p in self.game.players
+            ),
+            inline=False,
+        )
+        await self.game.channel.send(embed=result_embed)
