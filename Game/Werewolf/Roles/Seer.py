@@ -1,9 +1,10 @@
 import discord
 
+import Modules.global_value as g
+
+from ..player import Player
 from ..role import Role
 from ..view import PlayerChoiceView
-from ..player import Player
-import Modules.global_value as g
 
 
 class Seer(Role):
@@ -15,6 +16,7 @@ class Seer(Role):
 
     async def night_ability(self, game_id: int, player: Player):
         game = g.games.get(game_id)
+        self.t = g.translators[game_id]
 
         embed = discord.Embed(title="占い", description="占い対象を選んでください")
         view = PlayerChoiceView(
@@ -29,6 +31,4 @@ class Seer(Role):
         target_id = list(view.votes.values())[0]
         target = next((p for p in game.players if p.id == target_id), None)
 
-        await player.message(
-            f"{target.name}は{target.role.name}です。"
-        )
+        await player.message(f"{target.name}は{self.t.getstring(target.role.name)}です。")

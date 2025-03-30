@@ -1,7 +1,6 @@
 import tomllib
 from typing import Final
 
-
 with open("Resources/role_description.toml", "rb") as f:
     ROLE_DESCRIPTIONS: Final = tomllib.load(f)
 
@@ -107,4 +106,3 @@ class Fox(Role):
         self.initialize_role()
 
         self.is_kill_protected = True
-
