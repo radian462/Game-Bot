@@ -28,6 +28,9 @@ class Game:
     channel: Optional[discord.TextChannel] = None
     client: Optional[discord.Client] = None
 
+    win_team: Optional[str] = None
+    winner: list[player.Player] = field(default_factory=list)
+
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
 
@@ -100,6 +103,9 @@ class WerewolfManager:
     async def day(self) -> None:
         await DayManager(self.id).main()
 
+    def win_check(self) -> None:
+        return EndManager(self.id).win_check()
+    
     async def game_end(self) -> None:
         await EndManager(self.id).main()
 
@@ -271,25 +277,27 @@ class EndManager:
         self.id = id
         self.game = g.games.get(id)
         self.logger = make_logger("EndManager", id)
+        self.t = g.translators.get(id) 
 
     async def main(self) -> None:
-        if self._win_check():
-            await self._send_result()
+        await self._send_result()
+        del g.games[self.id]
 
-    def _win_check(self) -> bool:
+    def win_check(self) -> bool:
         '''
         人狼人数が生存者の半数を上回った場合、人狼勝利
         人狼が一人もいなくなった場合、村人勝利
         それ以外の場合、ゲーム続行
         '''
         if self._is_werewolf_win():
-            self.win_team = "TeamWerewolf"
-            return True
+            self.game.win_team = "TeamWerewolf"
         elif self._is_villager_win():
-            self.winner = [
-                p for p in self.game.players if p.role.team == "TeamVillager"
+            self.game.win_team = "TeamVillager"
+        
+        if self.game.win_team:
+            self.game.winner = [
+                p for p in self.game.players if p.role.team == self.game.win_team
             ]
-            self.win_team = "TeamVillager"
             return True
         else:
             return False
@@ -312,17 +320,17 @@ class EndManager:
     async def _send_result(self) -> None:
         embed = discord.Embed(
             title="人狼ゲーム",
-            description=f"{self.t.getstring(self.win_team)}勝利",
+            description=f"{self.t.getstring(self.game.win_team)}勝利",
             color=0xFFD700,
         )
         embed.add_field(
             name="勝者",
-            value="\n".join([f"<@!{player.id}>" for player in self.winner]),
+            value="\n".join([f"<@!{player.id}>" for player in self.game.winner]),
             inline=False,
         )
         await self.game.channel.send(embed=embed)
 
-        self.logger.info(f"Game has ended. Winners: {self.winner}")
+        self.logger.info(f"Game has ended. Winners: {self.game.winner}")
 
         result_embed = discord.Embed(
             title="人狼ゲーム",
