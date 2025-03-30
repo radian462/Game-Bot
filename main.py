@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 
 import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
+from Game.Werewolf.role import Medium, Hunter, Bakery, Werewolf, Madmate, BlackCat, Teruteru, Fox
+from Game.Werewolf.Roles import Seer
 import Modules.global_value as g
 from Modules.logger import make_logger
 from Modules.translator import Translator
@@ -30,6 +32,21 @@ logger = make_logger("System")
 g.translators = {}
 g.loggers = {}
 
+
+# 役職のインスタンスを作成するリスト
+role_classes = [
+    Seer.Seer(),
+    Medium(),
+    Hunter(),
+    Bakery(),
+    Werewolf(),
+    Madmate(),
+    BlackCat(),
+    Teruteru(),
+    Fox(),
+]
+
+roles = {role.name: role for role in role_classes}
 
 @client.event
 async def on_ready():
@@ -159,7 +176,7 @@ class WerewolfManager:
             "host": host_id,
             "participants": set(),
             "players": [],
-            "roles": {werewolf_role.roles["Werewolf"]: 1},
+            "roles": {roles["Werewolf"]: 1},
             "limit": limit,
             "message_id": message_id,
             "channel_id": channel_id,
@@ -253,7 +270,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
 @discord.app_commands.choices(
     role=[
         discord.app_commands.Choice(name=r.name, value=r.name)
-        for r in werewolf_role.roles.values()
+        for r in roles.values()
     ],
     number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
 )
@@ -284,7 +301,7 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
 
         if host_game_id is not None:
             werewolf_manager.games[host_game_id]["roles"][
-                werewolf_role.roles[role]
+                roles[role]
             ] = number
             await interaction.response.send_message(
                 f"{role}を{number}人に設定しました", ephemeral=True

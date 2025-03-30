@@ -105,7 +105,7 @@ class WerewolfManager:
 
     def win_check(self) -> None:
         return EndManager(self.id).win_check()
-    
+
     async def game_end(self) -> None:
         await EndManager(self.id).main()
 
@@ -122,14 +122,7 @@ class NightManager:
     async def main(self) -> None:
         await self._announce_night_start()
         await self.night_ability_time()
-
-        if self.game.turns != 0:
-            results = await self.kill_votes()
-            target_id = self._decide_kill_target(results)
-            target_player = next(p for p in self.game.last_alive_players if p.id == target_id)
-            await self._announce_kill(target_player)
-            target_player.kill()
-            self.logger.info(f"Werewolfs {target_player.id} tried to kill a target.")
+        await self.kill_time()
 
         self.game.refresh_alive_players()
 
@@ -152,9 +145,23 @@ class NightManager:
             await p.message(f"<@!{target_player.id}>を襲撃します")
 
     async def night_ability_time(self) -> None:
-        tasks = [p.role.night_ability() for p in self.game.alive_players]
+        tasks = [
+            p.role.night_ability(game_id=self.id, player=p)
+            for p in self.game.alive_players
+        ]
 
         await asyncio.gather(*tasks)
+
+    async def kill_time(self) -> None:
+        if self.game.turns != 0:
+            results = await self.kill_votes()
+            target_id = self._decide_kill_target(results)
+            target_player = next(
+                p for p in self.game.last_alive_players if p.id == target_id
+            )
+            await self._announce_kill(target_player)
+            target_player.kill()
+            self.logger.info(f"Werewolfs {target_player.id} tried to kill a target.")
 
     def _decide_kill_target(self, results: list[int]) -> player.Player:
         counter = Counter(results)
@@ -194,6 +201,7 @@ class NightManager:
         results = await asyncio.gather(*tasks)
         return results
 
+
 class DayManager:
     def __init__(self, id: Optional[int] = None) -> None:
         self.id = id
@@ -220,7 +228,9 @@ class DayManager:
         )
         embed.add_field(
             name="本日の死亡者",
-            value="\n".join([f"<@!{player.id}>" for player in self.today_killed_players])
+            value="\n".join(
+                [f"<@!{player.id}>" for player in self.today_killed_players]
+            )
             or "なし",
             inline=False,
         )
@@ -240,7 +250,7 @@ class DayManager:
             execute_target = (
                 result_candidates[0] if len(result_candidates) == 1 else None
             )
-        
+
         return execute_target
 
     async def execute_vote(self) -> None:
@@ -262,9 +272,9 @@ class DayManager:
             await self.game.channel.send(f"誰も処刑されませんでした。")
             self.logger.info(f"Nobody was executed.")
         else:
-            target_player = [
-                p for p in self.game.alive_players if p.id == execute_id
-            ][0]
+            target_player = [p for p in self.game.alive_players if p.id == execute_id][
+                0
+            ]
             target_player.execute()
             self.game.refresh_alive_players()
             await self.game.channel.send(f"<@!{target_player.id}> が処刑されました。")
@@ -272,28 +282,29 @@ class DayManager:
 
         self.game.last_alive_players = self.game.alive_players
 
+
 class EndManager:
     def __init__(self, id: Optional[int] = None) -> None:
         self.id = id
         self.game = g.games.get(id)
         self.logger = make_logger("EndManager", id)
-        self.t = g.translators.get(id) 
+        self.t = g.translators.get(id)
 
     async def main(self) -> None:
         await self._send_result()
         del g.games[self.id]
 
     def win_check(self) -> bool:
-        '''
+        """
         人狼人数が生存者の半数を上回った場合、人狼勝利
         人狼が一人もいなくなった場合、村人勝利
         それ以外の場合、ゲーム続行
-        '''
+        """
         if self._is_werewolf_win():
             self.game.win_team = "TeamWerewolf"
         elif self._is_villager_win():
             self.game.win_team = "TeamVillager"
-        
+
         if self.game.win_team:
             self.game.winner = [
                 p for p in self.game.players if p.role.team == self.game.win_team
@@ -301,7 +312,7 @@ class EndManager:
             return True
         else:
             return False
-        
+
     def _is_werewolf_win(self) -> bool:
         if (
             len([p for p in self.game.alive_players if p.role.is_werewolf])
@@ -310,13 +321,13 @@ class EndManager:
             return True
         else:
             return False
-        
+
     def _is_villager_win(self) -> bool:
         if len([p for p in self.game.alive_players if p.role.is_werewolf]) == 0:
             return True
         else:
             return False
-        
+
     async def _send_result(self) -> None:
         embed = discord.Embed(
             title="人狼ゲーム",

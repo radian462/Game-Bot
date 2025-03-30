@@ -1,9 +1,10 @@
 import Modules.global_value as g
-from Game.Werewolf.manager import NightManager, Game
+from Game.Werewolf.manager import Game, NightManager
 
 g.games = {}
 
 g.games[0] = Game()
+
 
 def test_decide_kill_target():
     results = [11111, 22222, 56564, 11111, 22222, 11111, 22222, 64645]

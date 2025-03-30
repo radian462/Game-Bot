@@ -1,6 +1,7 @@
 import tomllib
 from typing import Final
 
+
 with open("Resources/role_description.toml", "rb") as f:
     ROLE_DESCRIPTIONS: Final = tomllib.load(f)
 
@@ -25,21 +26,13 @@ class Role:
         self.win_condition = ROLE_DESCRIPTIONS[self.name]["WinCondition"]
         self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
-    async def night_ability(self):
+    async def night_ability(self, game_id: int, player):
         # オーバーライド用
         pass
 
 
 # 村人陣営
 class Villager(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
-class Seer(Role):
     def __init__(self):
         super().__init__()
         self.is_villager = True
@@ -115,18 +108,3 @@ class Fox(Role):
 
         self.is_kill_protected = True
 
-
-# 役職のインスタンスを作成するリスト
-role_classes = [
-    Seer(),
-    Medium(),
-    Hunter(),
-    Bakery(),
-    Werewolf(),
-    Madmate(),
-    BlackCat(),
-    Teruteru(),
-    Fox(),
-]
-
-roles = {role.name: role for role in role_classes}
