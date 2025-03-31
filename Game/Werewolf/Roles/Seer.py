@@ -31,4 +31,8 @@ class Seer(Role):
         target_id = list(view.votes.values())[0]
         target = next((p for p in game.players if p.id == target_id), None)
 
-        await player.message(f"{target.name}は{self.t.getstring(target.role.name)}です。")
+        await player.message(
+            f"{target.name}は{self.t.getstring(target.role.name)}です。"
+        )
+
+        await player.role.seer_ability(game_id, target)

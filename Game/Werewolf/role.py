@@ -26,7 +26,19 @@ class Role:
         self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
     async def night_ability(self, game_id: int, player):
-        # オーバーライド用
+        # 夜行動の記述
+        pass
+
+    async def seer_ability(self, game_id: int, player):
+        # 占われたときの記述
+        pass
+
+    async def killed_ability(self, game_id: int, player):
+        # 殺害されたときの記述
+        pass
+
+    async def executed_ability(self, game_id: int, player):
+        # 処刑されたときの記述
         pass
 
 
