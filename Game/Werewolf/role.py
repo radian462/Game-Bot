@@ -110,11 +110,4 @@ class Teruteru(Role):
         self.initialize_role()
 
 
-class Fox(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_neutral = True
 
-        self.initialize_role()
-
-        self.is_kill_protected = True

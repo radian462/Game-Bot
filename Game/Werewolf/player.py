@@ -37,6 +37,12 @@ class Player:
         else:
             self.logger.info(f"{self.id} was blocked to kill.")
 
+    def system_kill(self, status: str):
+        self.status = status
+        self.is_alive = False
+
+        self.logger.info(f"{self.id} was killed by system.")
+
     def execute(self):
         self.status = "Executed"
         self.is_alive = False

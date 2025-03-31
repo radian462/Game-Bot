@@ -2,9 +2,9 @@ import discord
 
 import Modules.global_value as g
 
-from ..player import Player
-from ..role import Role
-from ..view import PlayerChoiceView
+from ...player import Player
+from ...role import Role
+from ...view import PlayerChoiceView
 
 
 class Seer(Role):
@@ -35,4 +35,4 @@ class Seer(Role):
             f"{target.name}は{self.t.getstring(target.role.name)}です。"
         )
 
-        await player.role.seer_ability(game_id, target)
+        await target.role.seer_ability(game_id, target)

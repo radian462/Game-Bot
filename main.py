@@ -12,14 +12,14 @@ import Modules.global_value as g
 from Game.Werewolf.role import (
     Bakery,
     BlackCat,
-    Fox,
     Hunter,
     Madmate,
     Medium,
     Teruteru,
     Werewolf,
 )
-from Game.Werewolf.Roles import Seer
+from Game.Werewolf.Roles.Villiger import Seer
+from Game.Werewolf.Roles.Neutral import Fox
 from Modules.logger import make_logger
 from Modules.translator import Translator
 
@@ -52,7 +52,7 @@ role_classes = [
     Madmate(),
     BlackCat(),
     Teruteru(),
-    Fox(),
+    Fox.Fox(),
 ]
 
 roles = {role.name: role for role in role_classes}
