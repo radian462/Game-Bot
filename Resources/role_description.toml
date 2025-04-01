@@ -54,6 +54,6 @@ Description = "村人でも人狼でもない、独自の目的を持つ1人だ�
 
 ["Fox"]
 Team = "TeamNeutral"
-FortuneResult = "TeamNeutral"
+FortuneResult = "TeamFox"
 WinCondition = "ゲーム終了時まで生存する"
 Description = "村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は生き延びること。人狼から襲撃を受けても死亡しませんが、占い師に占われると呪殺されます。生き延びるために、うまく立ち回りましょう。"

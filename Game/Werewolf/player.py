@@ -29,7 +29,7 @@ class Player:
         self.role = role
 
     def kill(self):
-        if not self.is_kill_protected:
+        if not self.is_kill_protected and not self.role.is_kill_protected:
             self.status = "Killed"
             self.is_alive = False
 

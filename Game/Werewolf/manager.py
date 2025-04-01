@@ -305,6 +305,10 @@ class EndManager:
         elif self._is_villager_win():
             self.game.win_team = "TeamVillager"
 
+        if self.game.win_team in ["TeamWerewolf", "TeamVillager"]:
+            if self._is_fox_win():
+                self.game.win_team = "TeamFox"
+
         if self.game.win_team:
             self.game.winner = [
                 p for p in self.game.players if p.role.team == self.game.win_team
@@ -324,6 +328,12 @@ class EndManager:
 
     def _is_villager_win(self) -> bool:
         if len([p for p in self.game.alive_players if p.role.is_werewolf]) == 0:
+            return True
+        else:
+            return False
+    
+    def _is_fox_win(self) -> bool:
+        if [p for p in self.game.alive_players if p.role.name == "Fox"]:
             return True
         else:
             return False
