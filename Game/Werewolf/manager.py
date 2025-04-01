@@ -78,6 +78,11 @@ class WerewolfManager:
 
         random.shuffle(self.game.assigned_roles)
 
+        if len(self.game.assigned_roles) > len(self.game.players):
+            self.game.assigned_roles = self.game.assigned_roles[
+                : len(self.game.players)
+            ]
+
         for i, r in enumerate(self.game.assigned_roles):
             self.game.players[i].assign_role(r)
             self.logger.info(f"{self.game.players[i].id} has been assigned {r.name}")
@@ -292,7 +297,7 @@ class EndManager:
 
     async def main(self) -> None:
         await self._send_result()
-        del g.games[self.id]
+        self._cleanup_game_data()
 
     def win_check(self) -> bool:
         """
@@ -331,7 +336,7 @@ class EndManager:
             return True
         else:
             return False
-    
+
     def _is_fox_win(self) -> bool:
         if [p for p in self.game.alive_players if p.role.name == "Fox"]:
             return True
@@ -366,3 +371,16 @@ class EndManager:
             inline=False,
         )
         await self.game.channel.send(embed=result_embed)
+
+    def _cleanup_game_data(self) -> None:
+        """ゲーム終了後に関連データを削除"""
+        if self.id in g.games:
+            del g.games[self.id]
+
+        if self.id in g.translators:
+            del g.translators[self.id]
+
+        if self.id in g.loggers:
+            del g.loggers[self.id]
+
+        self.logger.info(f"Game data for ID {self.id} has been cleaned up.")
