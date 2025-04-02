@@ -11,6 +11,17 @@ from dotenv import load_dotenv
 
 import Modules.global_value as g
 from Modules.logger import make_logger
+from Game.Werewolf.role import (
+    Bakery,
+    BlackCat,
+    Hunter,
+    Madmate,
+    Medium,
+    Teruteru,
+    Werewolf,
+)
+from Game.Werewolf.Roles.Villiger import Seer
+from Game.Werewolf.Roles.Neutral import Fox
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
 from Game.Werewolf import player, role
@@ -19,7 +30,6 @@ client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
 logger = make_logger("System")
-g.werewolf_games = {}
 
 NOT_HOST_MSG: Final = "あなたは募集者ではありません"
 NOT_PLAYER_MSG: Final = "あなたは参加していません"
@@ -31,6 +41,27 @@ GAME_NOT_EXIST_MSG: Final = "ゲームが存在しません"
 
 ERROR_TEMPLATE: Final = "エラーが発生しました\n"
 
+# 役職のインスタンスを作成するリスト
+role_classes = [
+    Seer.Seer(),
+    Medium(),
+    Hunter(),
+    Bakery(),
+    Werewolf(),
+    Madmate(),
+    BlackCat(),
+    Teruteru(),
+    Fox.Fox(),
+]
+
+roles = {role.name: role for role in role_classes}
+
+@client.event
+async def on_ready():
+    await tree.sync()
+    logger.info(f"Successed to Log in")
+
+g.werewolf_games = {}
 
 @dataclass
 class WerewolfGame:
@@ -44,6 +75,8 @@ class WerewolfGame:
     joinview: JoinView
     logger: logging.LoggerAdapter
     translator: Translator
+
+    is_started: bool = False
 
     # 以下ゲーム進行情報
     participant_ids: set[int] = field(default_factory=set)
@@ -95,6 +128,39 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
+@tree.command(name="role", description="人狼ゲームの役職を設定します")
+@app_commands.describe(role="役職名", number="人数")
+@discord.app_commands.choices(
+    role=[
+        discord.app_commands.Choice(name=r.name, value=r.name) for r in roles.values()
+    ],
+    number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
+)
+@discord.app_commands.guild_only()
+async def set_role(interaction: discord.Interaction, role: str, number: int):
+    logger.info(f"{interaction.user.id} set {role} to {number}.")
+    try:
+        #ゲームの中で募集中かつあなたのゲームでこのチャンネル内であるゲームを取得
+        recruiting_games = [game for game in g.werewolf_games.values() if game.is_started == False]
+        your_games = [game for game in recruiting_games if game.host_id == interaction.user.id]
+        setting_game = next(
+            (game for game in your_games if game.channel.id == interaction.channel.id),
+            None,
+        )
+
+        if setting_game is None:
+            await interaction.response.send_message(GAME_NOT_EXIST_MSG, ephemeral=True)
+            return
+        else:
+            setting_game.roles[roles[role]] = number
+            await interaction.response.send_message(
+                f"{role}を{number}人に設定しました", ephemeral=True
+            )
+
+            await update_recruiting_embed(setting_game.id)
+    except Exception as e:
+        traceback.print_exc()
+        await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
 async def update_recruiting_embed(id: int, interaction: Optional[discord.Interaction] = None, show_view: bool = True) -> discord.Embed:
     game = g.werewolf_games[id]
