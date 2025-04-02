@@ -15,8 +15,8 @@ class Seer(Role):
         self.initialize_role()
 
     async def night_ability(self, game_id: int, player: Player):
-        game = g.games.get(game_id)
-        self.t = g.translators[game_id]
+        game = g.werewolf_games.get(game_id)
+        self.t = game.translator
 
         embed = discord.Embed(title="占い", description="占い対象を選んでください")
         view = PlayerChoiceView(

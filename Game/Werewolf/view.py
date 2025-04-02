@@ -12,8 +12,9 @@ class RoleInfoView(discord.ui.View):
     def __init__(self, players: list, game_id: int, timeout: int | None = None):
         super().__init__(timeout=timeout)
         self.players = players
-        self.logger = g.loggers[game_id]
-        self.t = g.translators[game_id]
+        self.game = g.werewolf_games[game_id]
+        self.logger = self.game.logger
+        self.t = self.game.translator
 
     @discord.ui.button(emoji="ℹ️", style=discord.ButtonStyle.gray)
     async def InfoButton(
@@ -61,15 +62,15 @@ class PlayerChoiceView(discord.ui.View):
             for choice in self.choices
         ]
 
-        self.game_id = game_id
-        self.logger = g.loggers[game_id]
-        self.t = g.translators[game_id]
+        self.game = g.werewolf_games[game_id]
+        self.logger = self.game.logger
+        self.t = self.game.translator
 
         if allow_skip:
             self.options.append(discord.SelectOption(label="スキップ", value="skip"))
 
         self.add_item(
-            GenericSelect(self.options, self.choices, self.process, self.game_id)
+            GenericSelect(self.options, self.choices, self.process, self.game.id)
         )
 
 
@@ -85,8 +86,9 @@ class GenericSelect(Select):
         self.players = players
         self.votes: dict[int, int] = {}
         self.process = process
-        self.logger = g.loggers[game_id]
-        self.t = g.translators[game_id]
+        self.game = g.werewolf_games[game_id]
+        self.logger = self.game.logger
+        self.t = self.game.translator
 
     async def callback(self, interaction: discord.Interaction) -> None:
         if self.values:

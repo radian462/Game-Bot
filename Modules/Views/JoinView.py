@@ -93,7 +93,25 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.game is None:
+            self.game = g.werewolf_games.get(self.id)
+    
         logger.info(f"User {interaction.user.id} clicked start button.")
+
+        try:
+            # ホストかどうか
+            if interaction.user.id != self.game.host_id:
+                await interaction.response.send_message(NOT_HOST_MSG, ephemeral=True)
+                logger.info(f"User {interaction.user.id} attempted to start the game.")
+                return
+            
+            logger.info(f"Game {self.game.id} started by host {interaction.user.id}.")
+            await self.game.update_recruiting_embed(interaction, show_view=False)
+            await self.game.start()
+        except Exception as e:
+            traceback.print_exc()
+            await interaction.response.send_message(ERROR_TEMPLATE + str(e))
+
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
     async def end(self, interaction: discord.Interaction, button: discord.ui.Button):

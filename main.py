@@ -33,7 +33,10 @@ GAME_NOT_EXIST_MSG: Final = "ゲームが存在しません"
 
 ERROR_TEMPLATE: Final = "エラーが発生しました\n"
 
-g.werewolf_games = {}
+@client.event
+async def on_ready():
+    await tree.sync()
+    logger.info(f"Successed to Log in")
 
 # 役職のインスタンスを作成するリスト
 role_classes = [
@@ -49,13 +52,6 @@ role_classes = [
 ]
 
 roles = {role.name: role for role in role_classes}
-
-
-@client.event
-async def on_ready():
-    await tree.sync()
-    logger.info(f"Successed to Log in")
-
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
 @app_commands.describe(limit="人数制限")
@@ -82,6 +78,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
             joinview=view,
             logger=make_logger("Game", id),
             translator=Translator("ja"),
+            roles={roles["Werewolf"]: 1},
         )
         g.werewolf_games[id] = game
         await game.update_recruiting_embed()
@@ -123,7 +120,7 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
                 f"{role}を{number}人に設定しました", ephemeral=True
             )
 
-            await setting_game.update_recruiting_embed(setting_game.id)
+            await setting_game.update_recruiting_embed()
     except Exception as e:
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))

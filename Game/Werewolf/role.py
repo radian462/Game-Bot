@@ -108,3 +108,4 @@ class Teruteru(Role):
         self.is_neutral = True
 
         self.initialize_role()
+

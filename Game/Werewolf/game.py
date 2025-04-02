@@ -5,7 +5,7 @@ from typing import Optional
 import discord
 
 import Modules.global_value as g
-from Game.Werewolf import player, role
+from Game.Werewolf import player, role, main
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
 
@@ -83,3 +83,8 @@ class WerewolfGame:
     def delete(self):
         del g.werewolf_games[self.id]
         self.logger.info(f"Game {self.id} deleted.")
+
+    async def start(self):
+        self.is_started = True
+        await main.main(self.id)
+        self.logger.info(f"Game {self.id} started.")

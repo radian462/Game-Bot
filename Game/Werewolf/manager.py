@@ -11,54 +11,18 @@ from Game.Werewolf import player, role
 from Game.Werewolf.view import PlayerChoiceView, RoleInfoView
 from Modules.logger import make_logger
 
-g.games = {}
-
-
-@dataclass
-class Game:
-    id: int = 0
-    turns: int = 0
-
-    players: list[player.Player] = field(default_factory=list)
-    alive_players: list[player.Player] = field(default_factory=list)
-    last_alive_players: list[player.Player] = field(default_factory=list)
-    roles: dict[role.Role, int] = field(default_factory=dict)
-    assigned_roles: list[role.Role] = field(default_factory=list)
-
-    channel: Optional[discord.TextChannel] = None
-    client: Optional[discord.Client] = None
-
-    win_team: Optional[str] = None
-    winner: list[player.Player] = field(default_factory=list)
-
-    def refresh_alive_players(self):
-        self.alive_players = [p for p in self.players if p.is_alive]
-
 
 class WerewolfManager:
-    def __init__(self, game: dict, client: discord.Client):
-        self.id = game["id"]
-        self.host = game["host"]
-        self.participants = game["participants"]
-        self.client = client
-        self.message_id = game["message_id"]
-        self.channel_id = game["channel_id"]
-        self.channel = self.client.get_channel(self.channel_id)
-
-        self.winner = []
-        self.win_team = []
-
-        self.lang = "ja"
-        self.t = g.translators[self.id]
-        self.logger = g.loggers[self.id]
-
-        self.game = Game(
-            id=game["id"], roles=game["roles"], channel=self.channel, client=client
-        )
-        g.games[game["id"]] = self.game
+    def __init__(self, id: int) -> None:
+        self.id = id
+        self.game = g.werewolf_games.get(id)
+        self.client = self.game.client
+        self.logger = make_logger("WerewolfManager", id)
+        self.t = self.game.translator
 
     async def _create_player_instances(self) -> None:
-        players_ids = [self.host] + list(self.participants)
+        players_ids = [self.game.host_id] + list(self.game.participant_ids)
+
 
         for id in players_ids:
             p = player.Player(id, self.client)
@@ -118,7 +82,7 @@ class WerewolfManager:
 class NightManager:
     def __init__(self, id: Optional[int] = None) -> None:
         self.id = id
-        self.game = g.games.get(id)
+        self.game = g.werewolf_games.get(id)
         self.logger = make_logger("NightManager", id)
 
         self.alive_werewolf_players: list[player.Player] = []
@@ -210,7 +174,7 @@ class NightManager:
 class DayManager:
     def __init__(self, id: Optional[int] = None) -> None:
         self.id = id
-        self.game = g.games.get(id)
+        self.game = g.werewolf_games.get(id)
         self.logger = make_logger("DayManager", id)
 
         self.today_killed_players: list[player.Player] = []
@@ -291,13 +255,13 @@ class DayManager:
 class EndManager:
     def __init__(self, id: Optional[int] = None) -> None:
         self.id = id
-        self.game = g.games.get(id)
+        self.game = g.werewolf_games.get(id)
         self.logger = make_logger("EndManager", id)
-        self.t = g.translators.get(id)
+        self.t = self.game.translator
 
     async def main(self) -> None:
         await self._send_result()
-        self._cleanup_game_data()
+        self.game.delete()
 
     def win_check(self) -> bool:
         """
@@ -371,16 +335,3 @@ class EndManager:
             inline=False,
         )
         await self.game.channel.send(embed=result_embed)
-
-    def _cleanup_game_data(self) -> None:
-        """ゲーム終了後に関連データを削除"""
-        if self.id in g.games:
-            del g.games[self.id]
-
-        if self.id in g.translators:
-            del g.translators[self.id]
-
-        if self.id in g.loggers:
-            del g.loggers[self.id]
-
-        self.logger.info(f"Game data for ID {self.id} has been cleaned up.")
