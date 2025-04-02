@@ -22,15 +22,11 @@ tree = app_commands.CommandTree(client)
 
 logger = make_logger("System")
 
-NOT_HOST_MSG: Final = "あなたは募集者ではありません"
-NOT_PLAYER_MSG: Final = "あなたは参加していません"
-ALREADY_PLAYER_MSG: Final = "すでに参加しています"
-LIMIT_PLAYER_MSG: Final = "人数制限に達しました"
-HOST_JOIN_MSG: Final = "募集者は参加できません"
-HOST_LEAVE_MSG: Final = "募集者は退出できません"
 GAME_NOT_EXIST_MSG: Final = "ゲームが存在しません"
 
 ERROR_TEMPLATE: Final = "エラーが発生しました\n"
+
+g.werewolf_games = {}
 
 # 役職のインスタンスを作成するリスト
 role_classes = [
@@ -81,7 +77,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
             translator=Translator("ja"),
         )
         g.werewolf_games[id] = game
-        await update_recruiting_embed(id)
+        await game.update_recruiting_embed()
     except Exception as e:
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
@@ -120,50 +116,10 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
                 f"{role}を{number}人に設定しました", ephemeral=True
             )
 
-            await update_recruiting_embed(setting_game.id)
+            await setting_game.update_recruiting_embed(setting_game.id)
     except Exception as e:
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
-
-
-async def update_recruiting_embed(
-    id: int, interaction: Optional[discord.Interaction] = None, show_view: bool = True
-) -> discord.Embed:
-    game = g.werewolf_games[id]
-    t = game.translator
-
-    embed = discord.Embed(
-        title=f"人狼ゲーム({len(game.participant_ids) + 1}/{game.limit}人)",
-        description=f"募集者:<@!{game.host_id}>",
-        color=discord.Color.green(),
-    )
-    embed.add_field(
-        name="参加者",
-        value="\n".join([f"<@!{player}>" for player in game.participant_ids]) or "なし",
-        inline=False,
-    )
-    embed.add_field(
-        name="役職",
-        value="\n".join(
-            [
-                f"{t.getstring(role.name)} {count}人"
-                for role, count in game.roles.items()
-                if count > 0
-            ]
-        )
-        or "なし",
-        inline=False,
-    )
-
-    view = game.joinview if show_view == True else None
-
-    if interaction:
-        await interaction.response.edit_message(embed=embed, view=view)
-    else:
-        channel = client.get_channel(game.channel.id)
-        message = await channel.fetch_message(game.message.id)
-        await message.edit(embed=embed, view=view)
-
 
 load_dotenv()
 client.run(os.getenv("DISCORD_TOKEN"))

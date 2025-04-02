@@ -9,8 +9,6 @@ from Game.Werewolf import player, role
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
 
-g.werewolf_games = {}
-
 @dataclass
 class WerewolfGame:
     # 以下ゲーム募集情報
@@ -40,5 +38,45 @@ class WerewolfGame:
     win_team: Optional[str] = None
     winner: list[player.Player] = field(default_factory=list)
 
+
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
+
+
+    async def update_recruiting_embed(
+        self, interaction: Optional[discord.Interaction] = None, show_view: bool = True
+    ) -> discord.Embed:
+        t = self.translator
+
+        embed = discord.Embed(
+            title=f"人狼ゲーム({len(self.participant_ids) + 1}/{self.limit}人)",
+            description=f"募集者:<@!{self.host_id}>",
+            color=discord.Color.green(),
+        )
+        embed.add_field(
+            name="参加者",
+            value="\n".join([f"<@!{player}>" for player in self.participant_ids]) or "なし",
+            inline=False,
+        )
+        embed.add_field(
+            name="役職",
+            value="\n".join(
+                [
+                    f"{t.getstring(role.name)} {count}人"
+                    for role, count in self.roles.items()
+                    if count > 0
+                ]
+            )
+            or "なし",
+            inline=False,
+        )
+
+        view = self.joinview if show_view == True else None
+
+        if interaction:
+            await interaction.response.edit_message(embed=embed, view=view)
+        else:
+            channel = self.client.get_channel(self.channel.id)
+            message = await channel.fetch_message(self.message.id)
+            await message.edit(embed=embed, view=view)
+
