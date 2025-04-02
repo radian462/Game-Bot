@@ -28,24 +28,24 @@ class JoinView(discord.ui.View):
         if self.game is None:
             self.game = g.werewolf_games.get(self.id)
 
-        logger.info(f"{interaction.user.id} clicked join button.")
+        logger.info(f"User {interaction.user.id} clicked join button.")
         try:
-            #ホストかどうか
+            # ホストかどうか
             if interaction.user.id == self.game.host_id:
                 await interaction.response.send_message(HOST_JOIN_MSG, ephemeral=True)
-                logger.info(f"{interaction.user.id} is host.")
+                logger.info(f"User {interaction.user.id} (host) attempted to join but is not allowed.")
                 return
 
-            #すでに参加しているか
+            # すでに参加しているか
             if interaction.user.id in self.game.participant_ids:
                 await interaction.response.send_message(ALREADY_PLAYER_MSG, ephemeral=True)
-                logger.info(f"{interaction.user.id} is already player.")
+                logger.info(f"User {interaction.user.id} is already a participant.")
                 return
             
-            #参加人数制限に達しているか
+            # 参加人数制限に達しているか
             if len(self.game.participant_ids) + 1 >= self.game.limit:
                 await interaction.response.send_message(LIMIT_PLAYER_MSG, ephemeral=True)
-                logger.info(f"{interaction.user.id} could not join for limit of player.")
+                logger.info(f"User {interaction.user.id} could not join due to player limit.")
                 return
 
             self.game.participant_ids.add(interaction.user.id)
@@ -56,12 +56,33 @@ class JoinView(discord.ui.View):
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
-        logger.info(f"{interaction.user.id} clicked leave button.")
+        if self.game is None:
+            self.game = g.werewolf_games.get(self.id)
+
+        logger.info(f"User {interaction.user.id} clicked leave button.")
+        try:
+            # ホストかどうか
+            if interaction.user.id == self.game.host_id:
+                await interaction.response.send_message(HOST_LEAVE_MSG, ephemeral=True)
+                logger.info(f"User {interaction.user.id} (host) attempted to leave but is not allowed.")
+                return
+            
+            # 参加しているか
+            if interaction.user.id not in self.game.participant_ids:
+                await interaction.response.send_message(NOT_PLAYER_MSG, ephemeral=True)
+                logger.info(f"User {interaction.user.id} tried to leave but was not in the game.")
+                return
+
+            self.game.participant_ids.remove(interaction.user.id)
+            await self.game.update_recruiting_embed(interaction)
+        except Exception as e:
+            traceback.print_exc()
+            await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
-        logger.info(f"{interaction.user.id} clicked start button.")
+        logger.info(f"User {interaction.user.id} clicked start button.")
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
     async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
-        logger.info(f"{interaction.user.id} clicked end button.")
+        logger.info(f"User {interaction.user.id} clicked end button.")
