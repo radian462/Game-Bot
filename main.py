@@ -9,8 +9,15 @@ from dotenv import load_dotenv
 
 import Modules.global_value as g
 from Game.Werewolf.game import WerewolfGame
-from Game.Werewolf.role import (Bakery, BlackCat, Hunter, Madmate, Medium,
-                                Teruteru, Werewolf)
+from Game.Werewolf.role import (
+    Bakery,
+    BlackCat,
+    Hunter,
+    Madmate,
+    Medium,
+    Teruteru,
+    Werewolf,
+)
 from Game.Werewolf.Roles.Neutral import Fox
 from Game.Werewolf.Roles.Villiger import Seer
 from Modules.logger import make_logger
@@ -120,6 +127,7 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
     except Exception as e:
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
+
 
 load_dotenv()
 client.run(os.getenv("DISCORD_TOKEN"))

@@ -9,6 +9,7 @@ from Game.Werewolf import player, role
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
 
+
 @dataclass
 class WerewolfGame:
     # 以下ゲーム募集情報
@@ -38,10 +39,8 @@ class WerewolfGame:
     win_team: Optional[str] = None
     winner: list[player.Player] = field(default_factory=list)
 
-
     def refresh_alive_players(self):
         self.alive_players = [p for p in self.players if p.is_alive]
-
 
     async def update_recruiting_embed(
         self, interaction: Optional[discord.Interaction] = None, show_view: bool = True
@@ -55,7 +54,8 @@ class WerewolfGame:
         )
         embed.add_field(
             name="参加者",
-            value="\n".join([f"<@!{player}>" for player in self.participant_ids]) or "なし",
+            value="\n".join([f"<@!{player}>" for player in self.participant_ids])
+            or "なし",
             inline=False,
         )
         embed.add_field(
@@ -80,3 +80,6 @@ class WerewolfGame:
             message = await channel.fetch_message(self.message.id)
             await message.edit(embed=embed, view=view)
 
+    def delete(self):
+        del g.werewolf_games[self.id]
+        self.logger.info(f"Game {self.id} deleted.")
