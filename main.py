@@ -1,8 +1,6 @@
-import logging
 import os
 import traceback
 import uuid
-from dataclasses import dataclass, field
 from typing import Final, Optional
 
 import discord
@@ -10,21 +8,14 @@ from discord import app_commands
 from dotenv import load_dotenv
 
 import Modules.global_value as g
-from Modules.logger import make_logger
-from Game.Werewolf.role import (
-    Bakery,
-    BlackCat,
-    Hunter,
-    Madmate,
-    Medium,
-    Teruteru,
-    Werewolf,
-)
-from Game.Werewolf.Roles.Villiger import Seer
+from Game.Werewolf.game import WerewolfGame
+from Game.Werewolf.role import (Bakery, BlackCat, Hunter, Madmate, Medium,
+                                Teruteru, Werewolf)
 from Game.Werewolf.Roles.Neutral import Fox
+from Game.Werewolf.Roles.Villiger import Seer
+from Modules.logger import make_logger
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
-from Game.Werewolf import player, role
 
 client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
@@ -56,44 +47,11 @@ role_classes = [
 
 roles = {role.name: role for role in role_classes}
 
+
 @client.event
 async def on_ready():
     await tree.sync()
     logger.info(f"Successed to Log in")
-
-g.werewolf_games = {}
-
-@dataclass
-class WerewolfGame:
-    # 以下ゲーム募集情報
-    id: int
-    host_id: int
-    limit: int
-    message: discord.Message
-    channel: discord.TextChannel
-    client: discord.Client
-    joinview: JoinView
-    logger: logging.LoggerAdapter
-    translator: Translator
-
-    is_started: bool = False
-
-    # 以下ゲーム進行情報
-    participant_ids: set[int] = field(default_factory=set)
-
-    turns: int = 0
-
-    players: list[player.Player] = field(default_factory=list)
-    alive_players: list[player.Player] = field(default_factory=list)
-    last_alive_players: list[player.Player] = field(default_factory=list)
-    roles: dict[role.Role, int] = field(default_factory=dict)
-    assigned_roles: list[role.Role] = field(default_factory=list)
-
-    win_team: Optional[str] = None
-    winner: list[player.Player] = field(default_factory=list)
-
-    def refresh_alive_players(self):
-        self.alive_players = [p for p in self.players if p.is_alive]
 
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
@@ -128,6 +86,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
+
 @tree.command(name="role", description="人狼ゲームの役職を設定します")
 @app_commands.describe(role="役職名", number="人数")
 @discord.app_commands.choices(
@@ -140,9 +99,13 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
 async def set_role(interaction: discord.Interaction, role: str, number: int):
     logger.info(f"{interaction.user.id} set {role} to {number}.")
     try:
-        #ゲームの中で募集中かつあなたのゲームでこのチャンネル内であるゲームを取得
-        recruiting_games = [game for game in g.werewolf_games.values() if game.is_started == False]
-        your_games = [game for game in recruiting_games if game.host_id == interaction.user.id]
+        # ゲームの中で募集中かつあなたのゲームでこのチャンネル内であるゲームを取得
+        recruiting_games = [
+            game for game in g.werewolf_games.values() if game.is_started == False
+        ]
+        your_games = [
+            game for game in recruiting_games if game.host_id == interaction.user.id
+        ]
         setting_game = next(
             (game for game in your_games if game.channel.id == interaction.channel.id),
             None,
@@ -162,7 +125,10 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
         traceback.print_exc()
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
-async def update_recruiting_embed(id: int, interaction: Optional[discord.Interaction] = None, show_view: bool = True) -> discord.Embed:
+
+async def update_recruiting_embed(
+    id: int, interaction: Optional[discord.Interaction] = None, show_view: bool = True
+) -> discord.Embed:
     game = g.werewolf_games[id]
     t = game.translator
 

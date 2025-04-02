@@ -9,17 +9,10 @@ from dotenv import load_dotenv
 import Game.Werewolf.main as werewolf_main
 import Game.Werewolf.role as werewolf_role
 import Modules.global_value as g
-from Game.Werewolf.role import (
-    Bakery,
-    BlackCat,
-    Hunter,
-    Madmate,
-    Medium,
-    Teruteru,
-    Werewolf,
-)
-from Game.Werewolf.Roles.Villiger import Seer
+from Game.Werewolf.role import (Bakery, BlackCat, Hunter, Madmate, Medium,
+                                Teruteru, Werewolf)
 from Game.Werewolf.Roles.Neutral import Fox
+from Game.Werewolf.Roles.Villiger import Seer
 from Modules.logger import make_logger
 from Modules.translator import Translator
 
