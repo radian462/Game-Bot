@@ -1,13 +1,15 @@
 import discord
 
 import Game.Werewolf.role as role
+import Modules.global_value as g
 from Modules.logger import make_logger
 
 
 class Player:
-    def __init__(self, id, client):
+    def __init__(self, id, game_id):
         self.id = id
-        self.client = client
+        self.game = g.werewolf_games.get(game_id)
+        self.client = self.game.client
         self.member = None
         self.status = "Alive"
         self.is_alive = True
@@ -43,8 +45,10 @@ class Player:
 
         self.logger.info(f"{self.id} was killed by system.")
 
-    def execute(self):
-        self.status = "Executed"
+    def execute(self, status: str = "Executed"):
+        self.status = status
         self.is_alive = False
 
         self.logger.info(f"{self.id} was executed.")
+
+        self.role.executed_ability(game_id=self.game.id, player=self)

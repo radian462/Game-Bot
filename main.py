@@ -9,10 +9,9 @@ from dotenv import load_dotenv
 
 import Modules.global_value as g
 from Game.Werewolf.game import WerewolfGame
-from Game.Werewolf.role import (Bakery, BlackCat, Hunter, Medium, Teruteru,
-                                Werewolf)
+from Game.Werewolf.role import Bakery, Hunter, Medium, Teruteru, Werewolf
 from Game.Werewolf.Roles.Neutral import Fox
-from Game.Werewolf.Roles.Villiger import Madmate, Seer
+from Game.Werewolf.Roles.Villiger import Madmate, Nekomata, Seer, BlackCat
 from Modules.logger import make_logger
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
@@ -21,6 +20,7 @@ client = discord.Client(intents=discord.Intents.default())
 tree = app_commands.CommandTree(client)
 
 logger = make_logger("System")
+t = Translator("ja")
 
 GAME_NOT_EXIST_MSG: Final = "ゲームが存在しません"
 
@@ -39,9 +39,10 @@ role_classes = [
     Medium(),
     Hunter(),
     Bakery(),
+    Nekomata.Nekomata(),
     Werewolf(),
     Madmate.Madmate(),
-    BlackCat(),
+    BlackCat.BlackCat(),
     Teruteru(),
     Fox.Fox(),
 ]
@@ -87,7 +88,8 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
 @app_commands.describe(role="役職名", number="人数")
 @discord.app_commands.choices(
     role=[
-        discord.app_commands.Choice(name=r.name, value=r.name) for r in roles.values()
+        discord.app_commands.Choice(name=t.getstring(r.name), value=r.name)
+        for r in roles.values()
     ],
     number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
 )

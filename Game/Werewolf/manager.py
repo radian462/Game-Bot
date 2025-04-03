@@ -24,7 +24,7 @@ class WerewolfManager:
         players_ids = [self.game.host_id] + list(self.game.participant_ids)
 
         for id in players_ids:
-            p = player.Player(id, self.client)
+            p = player.Player(id, self.id)
             await p.initialize()
             self.game.players.append(p)
 

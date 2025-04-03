@@ -28,6 +28,12 @@ FortuneResult = "TeamVillager"
 WinCondition = "キル能力を持つ役職を全て処刑する"
 Description = "毎朝、生存している場合パンを配り、パン屋が生存していることを村に知らせることができます。"
 
+["Nekomata"]
+Team = "TeamVillager"
+FortuneResult = "TeamVillager"
+WinCondition = "キル能力を持つ役職を全て処刑する"
+Description = "追放されたとき、ランダムなプレイヤーを道連れで追放します。"
+
 ["Werewolf"]
 Team = "TeamWerewolf"
 FortuneResult = "TeamWerewolf"

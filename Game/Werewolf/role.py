@@ -85,14 +85,6 @@ class Werewolf(Role):
         self.initialize_role()
 
 
-class BlackCat(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
 # 第三陣営
 class Teruteru(Role):
     def __init__(self):
