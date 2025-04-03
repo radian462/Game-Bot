@@ -5,7 +5,7 @@ from typing import Optional
 import discord
 
 import Modules.global_value as g
-from Game.Werewolf import player, role, main
+from Game.Werewolf import main, player, role
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
 

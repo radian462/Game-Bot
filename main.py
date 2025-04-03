@@ -9,17 +9,10 @@ from dotenv import load_dotenv
 
 import Modules.global_value as g
 from Game.Werewolf.game import WerewolfGame
-from Game.Werewolf.role import (
-    Bakery,
-    BlackCat,
-    Hunter,
-    Madmate,
-    Medium,
-    Teruteru,
-    Werewolf,
-)
+from Game.Werewolf.role import (Bakery, BlackCat, Hunter, Medium, Teruteru,
+                                Werewolf)
 from Game.Werewolf.Roles.Neutral import Fox
-from Game.Werewolf.Roles.Villiger import Seer
+from Game.Werewolf.Roles.Villiger import Madmate, Seer
 from Modules.logger import make_logger
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
@@ -33,10 +26,12 @@ GAME_NOT_EXIST_MSG: Final = "ゲームが存在しません"
 
 ERROR_TEMPLATE: Final = "エラーが発生しました\n"
 
+
 @client.event
 async def on_ready():
     await tree.sync()
     logger.info(f"Successed to Log in")
+
 
 # 役職のインスタンスを作成するリスト
 role_classes = [
@@ -45,13 +40,14 @@ role_classes = [
     Hunter(),
     Bakery(),
     Werewolf(),
-    Madmate(),
+    Madmate.Madmate(),
     BlackCat(),
     Teruteru(),
     Fox.Fox(),
 ]
 
 roles = {role.name: role for role in role_classes}
+
 
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
 @app_commands.describe(limit="人数制限")

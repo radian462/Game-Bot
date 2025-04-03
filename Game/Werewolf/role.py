@@ -85,14 +85,6 @@ class Werewolf(Role):
         self.initialize_role()
 
 
-class Madmate(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
 class BlackCat(Role):
     def __init__(self):
         super().__init__()
@@ -108,4 +100,3 @@ class Teruteru(Role):
         self.is_neutral = True
 
         self.initialize_role()
-

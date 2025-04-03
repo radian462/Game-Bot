@@ -35,13 +35,13 @@ WinCondition = "人狼以外のキル能力を持つ役職を全滅させて、�
 Description = "毎晩、襲撃するプレイヤーを決めてその人を襲撃することができます。\n襲撃されたプレイヤーは死亡します。村人を全滅させて村を滅ぼしましょう。"
 
 ["Madmate"]
-Team = "TeamVillager"
+Team = "TeamWerewolf"
 FortuneResult = "TeamVillager"
 WinCondition = "人狼の勝利"
 Description = "村人ですが、人狼の味方です。\nうまく議論をそらして、人狼を守りましょう。"
 
 ["BlackCat"]
-Team = "TeamVillager"
+Team = "TeamWerewolf"
 FortuneResult = "TeamVillager"
 WinCondition = "人狼の勝利"
 Description = "村人ですが、人狼の味方です。\n処刑されたときランダムな一人を道連れで処刑する事ができます。\nうまく議論をそらして、人狼を守りましょう。"

@@ -23,7 +23,6 @@ class WerewolfManager:
     async def _create_player_instances(self) -> None:
         players_ids = [self.game.host_id] + list(self.game.participant_ids)
 
-
         for id in players_ids:
             p = player.Player(id, self.client)
             await p.initialize()
