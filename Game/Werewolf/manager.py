@@ -187,6 +187,11 @@ class DayManager:
 
         await self._announce_day_start()
         await self.execute_vote()
+        self.reset_protected()
+
+    def reset_protected(self) -> None:
+        for player in self.game.players:
+            player.is_kill_protected = False
 
     async def _announce_day_start(self) -> None:
         embed = discord.Embed(

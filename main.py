@@ -9,9 +9,10 @@ from dotenv import load_dotenv
 
 import Modules.global_value as g
 from Game.Werewolf.game import WerewolfGame
-from Game.Werewolf.role import Bakery, Hunter, Medium, Teruteru, Werewolf
+from Game.Werewolf.role import Bakery, Medium, Teruteru, Werewolf
 from Game.Werewolf.Roles.Neutral import Fox
-from Game.Werewolf.Roles.Villiger import BlackCat, Madmate, Nekomata, Seer
+from Game.Werewolf.Roles.Villiger import (BlackCat, Hunter, Madmate, Nekomata,
+                                          Seer)
 from Modules.logger import make_logger
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
@@ -37,7 +38,7 @@ async def on_ready():
 role_classes = [
     Seer.Seer(),
     Medium(),
-    Hunter(),
+    Hunter.Hunter(),
     Bakery(),
     Nekomata.Nekomata(),
     Werewolf(),

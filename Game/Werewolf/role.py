@@ -59,15 +59,6 @@ class Medium(Role):
         self.initialize_role()
 
 
-# 人狼陣営
-class Hunter(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
 class Bakery(Role):
     def __init__(self):
         super().__init__()
