@@ -18,3 +18,4 @@ class BlackCat(Role):
 
         revenge_target = random.choice(filtered_players)
         revenge_target.execute("Revenged")
+        game.refresh_alive_players()
