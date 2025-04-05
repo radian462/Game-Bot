@@ -75,11 +75,3 @@ class Werewolf(Role):
 
         self.initialize_role()
 
-
-# 第三陣営
-class Teruteru(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_neutral = True
-
-        self.initialize_role()

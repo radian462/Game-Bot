@@ -71,11 +71,11 @@ class WerewolfManager:
     async def day(self) -> None:
         await DayManager(self.id).main()
 
-    def win_check(self) -> None:
-        return EndManager(self.id).win_check()
+    async def win_check(self) -> bool:
+        return await EndManager(self.id).win_check()
 
-    async def game_end(self) -> None:
-        await EndManager(self.id).main()
+    async def game_end(self, team: str, winners: list[player.Player]) -> None:
+        await EndManager(self.id).main(team, winners)
 
 
 class NightManager:
@@ -248,9 +248,10 @@ class DayManager:
             target_player = [p for p in self.game.alive_players if p.id == execute_id][
                 0
             ]
-            target_player.execute()
-            self.game.refresh_alive_players()
             await self.game.channel.send(f"<@!{target_player.id}> が処刑されました。")
+            
+            await target_player.execute()
+            self.game.refresh_alive_players()
             self.logger.info(f"{target_player.id} was executed.")
 
         self.game.last_alive_players = self.game.alive_players
@@ -263,11 +264,11 @@ class EndManager:
         self.logger = make_logger("EndManager", id)
         self.t = self.game.translator
 
-    async def main(self) -> None:
-        await self._send_result()
+    async def main(self, team: str, winners: list[player.Player]) -> None:
+        await self._send_result(team, winners)
         self.game.delete()
 
-    def win_check(self) -> bool:
+    async def win_check(self) -> bool:
         """
         人狼人数が生存者の半数を上回った場合、人狼勝利
         人狼が一人もいなくなった場合、村人勝利
@@ -286,9 +287,8 @@ class EndManager:
             self.game.winner = [
                 p for p in self.game.players if p.role.team == self.game.win_team
             ]
+            await self.main(self.game.win_team, self.game.winner)
             return True
-        else:
-            return False
 
     def _is_werewolf_win(self) -> bool:
         if (
@@ -311,20 +311,20 @@ class EndManager:
         else:
             return False
 
-    async def _send_result(self) -> None:
+    async def _send_result(self, team: str, winners: list[player.Player]) -> None:
         embed = discord.Embed(
             title="人狼ゲーム",
-            description=f"{self.t.getstring(self.game.win_team)}勝利",
+            description=f"{self.t.getstring(team)}勝利",
             color=0xFFD700,
         )
         embed.add_field(
             name="勝者",
-            value="\n".join([f"<@!{player.id}>" for player in self.game.winner]),
+            value="\n".join([f"<@!{player.id}>" for player in winners]),
             inline=False,
         )
         await self.game.channel.send(embed=embed)
 
-        self.logger.info(f"Game has ended. Winners: {self.game.winner}")
+        self.logger.info(f"Game has ended. Winners: {winners}")
 
         result_embed = discord.Embed(
             title="人狼ゲーム",

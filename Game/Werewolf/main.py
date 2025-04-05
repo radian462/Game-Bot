@@ -9,14 +9,11 @@ async def main(game: dict):
 
     while True:
         await werewolf_manager.night()
-
-        if werewolf_manager.win_check():
+        
+        if await werewolf_manager.win_check():
             break
-
+        
         await werewolf_manager.day()
-
-        if werewolf_manager.win_check():
+        
+        if await werewolf_manager.win_check():
             break
-
-    await werewolf_manager.game_end()
-    del werewolf_manager

@@ -45,10 +45,10 @@ class Player:
 
         self.logger.info(f"{self.id} was killed by system.")
 
-    def execute(self, status: str = "Executed"):
+    async def execute(self, status: str = "Executed"):
         self.status = status
         self.is_alive = False
 
         self.logger.info(f"{self.id} was executed.")
 
-        self.role.executed_ability(game_id=self.game.id, player=self)
+        await self.role.executed_ability(game_id=self.game.id, player=self)

@@ -53,13 +53,13 @@ WinCondition = "人狼の勝利"
 Description = "村人ですが、人狼の味方です。\n処刑されたときランダムな一人を道連れで処刑する事ができます。\nうまく議論をそらして、人狼を守りましょう。"
 
 ["Teruteru"]
-Team = "TeamNeutral"
+Team = "TeamTeruTeru"
 FortuneResult = "TeamNeutral"
 WinCondition = "処刑される"
 Description = "村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は処刑されること。うまく議論を操り、処刑されましょう。"
 
 ["Fox"]
-Team = "TeamNeutral"
-FortuneResult = "TeamFox"
+Team = "TeamFox"
+FortuneResult = "TeamNeutral"
 WinCondition = "ゲーム終了時まで生存する"
 Description = "村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は生き延びること。人狼から襲撃を受けても死亡しませんが、占い師に占われると呪殺されます。生き延びるために、うまく立ち回りましょう。"
