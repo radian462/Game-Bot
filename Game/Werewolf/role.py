@@ -74,4 +74,3 @@ class Werewolf(Role):
         self.is_werewolf = True
 
         self.initialize_role()
-

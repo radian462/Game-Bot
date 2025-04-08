@@ -16,6 +16,11 @@ class WerewolfManager:
     """
     ゲーム全体の管理クラス。
     プレイヤーの生成、役職の割り当て、各フェーズの開始などを管理する。
+
+    parameters
+    ----------
+    id: int
+        ゲームID
     """
 
     def __init__(self, id: int) -> None:
@@ -62,7 +67,9 @@ class WerewolfManager:
 
         # もし余分な役職があればプレイヤー数に合わせてトリムする
         if len(self.game.assigned_roles) > len(self.game.players):
-            self.game.assigned_roles = self.game.assigned_roles[: len(self.game.players)]
+            self.game.assigned_roles = self.game.assigned_roles[
+                : len(self.game.players)
+            ]
 
         # 各プレイヤーに役職を順次割り当て、ログにも記録する
         for i, r in enumerate(self.game.assigned_roles):
@@ -115,7 +122,7 @@ class WerewolfManager:
     async def game_end(self, team: str, winners: list[player.Player]) -> None:
         """
         ゲーム終了時の処理を実施する。
-        
+
         Parameters
         ----------
         team: str
@@ -130,6 +137,11 @@ class NightManager:
     """
     夜のフェーズを管理するクラス。
     夜間における各プレイヤーのアクションや襲撃処理などを行う。
+
+    parameters
+    ----------
+    id: Optional[int]
+        ゲームID。Noneの場合は新規ゲームとして扱う。
     """
 
     def __init__(self, id: Optional[int] = None) -> None:
@@ -223,6 +235,7 @@ class NightManager:
         人狼側プレイヤーからの襲撃対象投票を実施する。
         各プレイヤーに対してDMで投票を促し、その結果をリストとして返す。
         """
+
         async def wait_for_vote(player: player.Player) -> int:
             embed = discord.Embed(
                 title="キル投票", description="襲撃対象を選んでください"
@@ -262,6 +275,11 @@ class DayManager:
     """
     昼のフェーズを管理するクラス。
     議論後の処刑投票、結果の発表、生存状態のリセットなどを行う。
+
+    parameters
+    ----------
+    id: Optional[int]
+        ゲームID。Noneの場合は新規ゲームとして扱う。
     """
 
     def __init__(self, id: Optional[int] = None) -> None:
@@ -371,9 +389,11 @@ class DayManager:
             self.logger.info(f"Nobody was executed.")
         else:
             # 該当するプレイヤーを検索して処刑処理を実行
-            target_player = [p for p in self.game.alive_players if p.id == execute_id][0]
+            target_player = [p for p in self.game.alive_players if p.id == execute_id][
+                0
+            ]
             await self.game.channel.send(f"<@!{target_player.id}> が処刑されました。")
-            
+
             await target_player.execute()
             self.game.refresh_alive_players()
             self.logger.info(f"{target_player.id} was executed.")
@@ -386,6 +406,11 @@ class EndManager:
     """
     ゲーム終了時の処理や勝利条件のチェックを行うクラス。
     勝利条件の判定、結果の送信、ゲームインスタンスの削除などを管理する。
+
+    parameters
+    ----------
+    id: Optional[int]
+        ゲームID。Noneの場合は新規ゲームとして扱う。
     """
 
     def __init__(self, id: Optional[int] = None) -> None:
@@ -397,7 +422,7 @@ class EndManager:
     async def main(self, team: str, winners: list[player.Player]) -> None:
         """
         ゲーム終了時に勝利結果を送信し、ゲームインスタンスを削除する。
-        
+
         Parameters
         ----------
         team: str
@@ -413,9 +438,8 @@ class EndManager:
         ゲームの勝利条件を判定する。
         人狼の人数が生存者の半数以上なら人狼勝利、
         人狼がいなければ村人勝利、
-        さらに狐(Fox)が生存している場合は狐勝利に変更する。
-        
-        勝者が決まった場合は、勝利結果の送信処理(main)を呼び出しTrueを返す。
+        さらに妖狐(Fox)が生存している場合は狐勝利に上書きする。
+
         Returns
         -------
         bool

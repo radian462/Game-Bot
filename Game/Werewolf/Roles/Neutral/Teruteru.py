@@ -1,6 +1,7 @@
 from ...manager import EndManager
 from ...role import Role
 
+
 class Teruteru(Role):
     def __init__(self):
         super().__init__()
