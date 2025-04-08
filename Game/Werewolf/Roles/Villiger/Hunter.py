@@ -15,6 +15,18 @@ class Hunter(Role):
         self.initialize_role()
 
     async def night_ability(self, game_id: int, player: Player):
+        """
+        護衛対象を選ぶ。
+
+        Parameters
+        ----------
+        game_id : int
+            ゲームのID
+
+        player : Player
+            この役職のプレイヤー情報
+        """
+
         game = g.werewolf_games.get(game_id)
         self.t = game.translator
 

@@ -13,6 +13,18 @@ class BlackCat(Role):
         self.initialize_role()
 
     async def executed_ability(self, game_id: int, player):
+        """
+        自分が処刑されたときに、他の生存しているプレイヤーを道連れにする。
+
+        Parameters
+        ----------
+        game_id : int
+            ゲームのID
+
+        player : Player
+            この役職のプレイヤー情報
+        """
+
         game = g.werewolf_games.get(game_id)
         filtered_players = [p for p in game.alive_players if p.id != player.id]
 
