@@ -531,4 +531,3 @@ class EndManager:
         self.game.is_ended = True
         self.game.win_team = team
         self.game.winners = winners
-

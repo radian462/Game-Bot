@@ -1,10 +1,13 @@
 import traceback
-from typing import Final
+from typing import Final, TYPE_CHECKING
 
 import discord
 
 import Modules.global_value as g
 from Modules.logger import make_logger
+
+if TYPE_CHECKING:
+    from Game.Werewolf.game import WerewolfGame
 
 NOT_HOST_MSG: Final = "あなたは募集者ではありません"
 NOT_PLAYER_MSG: Final = "あなたは参加していません"
@@ -18,15 +21,22 @@ logger = make_logger("JoinView")
 
 
 class JoinView(discord.ui.View):
-    def __init__(self, id: str, timeout: int | None = None):
+    def __init__(self, id: int, timeout: int | None = None):
         super().__init__(timeout=timeout)
-        self.id = id
-        self.game = None
+        self.game_id = id
+        self.game: WerewolfGame | None = None
 
     @discord.ui.button(label="参加", style=discord.ButtonStyle.success)
     async def join(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.game is None:
-            self.game = g.werewolf_games.get(self.id)
+            self.game = g.werewolf_games.get(self.game_id)
+
+        if self.game is None:
+            await interaction.response.send_message(
+                "ゲームが見つかりませんでした。", ephemeral=True
+            )
+            logger.warning(f"Game with ID {self.game_id} not found.")
+            return
 
         logger.info(f"User {interaction.user.id} clicked join button.")
         try:
@@ -65,7 +75,14 @@ class JoinView(discord.ui.View):
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
     async def leave(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.game is None:
-            self.game = g.werewolf_games.get(self.id)
+            self.game = g.werewolf_games.get(self.game_id)
+
+        if self.game is None:
+            await interaction.response.send_message(
+                "ゲームが見つかりませんでした。", ephemeral=True
+            )
+            logger.warning(f"Game with ID {self.game_id} not found.")
+            return
 
         logger.info(f"User {interaction.user.id} clicked leave button.")
         try:
@@ -94,7 +111,14 @@ class JoinView(discord.ui.View):
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
     async def start(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.game is None:
-            self.game = g.werewolf_games.get(self.id)
+            self.game = g.werewolf_games.get(self.game_id)
+
+        if self.game is None:
+            await interaction.response.send_message(
+                "ゲームが見つかりませんでした。", ephemeral=True
+            )
+            logger.warning(f"Game with ID {self.game_id} not found.")
+            return
 
         logger.info(f"User {interaction.user.id} clicked start button.")
 
@@ -115,7 +139,14 @@ class JoinView(discord.ui.View):
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
     async def end(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.game is None:
-            self.game = g.werewolf_games.get(self.id)
+            self.game = g.werewolf_games.get(self.game_id)
+
+        if self.game is None:
+            await interaction.response.send_message(
+                "ゲームが見つかりませんでした。", ephemeral=True
+            )
+            logger.warning(f"Game with ID {self.game_id} not found.")
+            return
 
         logger.info(f"User {interaction.user.id} clicked end button.")
 

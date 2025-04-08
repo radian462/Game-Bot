@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 import discord
 from discord.ui import Select, View
@@ -55,7 +55,7 @@ class PlayerChoiceView(discord.ui.View):
     ) -> None:
         super().__init__()
         self.choices = choices
-        self.votes: dict[int, int] = {}
+        self.votes: dict[int, Optional[int]] = {}
         self.process = process
         self.options = [
             discord.SelectOption(label=choice.name, value=choice.id)
@@ -89,6 +89,7 @@ class GenericSelect(Select):
         self.game = g.werewolf_games[game_id]
         self.logger = self.game.logger
         self.t = self.game.translator
+        self.view: Optional[PlayerChoiceView] = None
 
     async def callback(self, interaction: discord.Interaction) -> None:
         if self.values:
@@ -96,6 +97,13 @@ class GenericSelect(Select):
 
             if self.process == "Execute":
                 alive_player_ids = (p.id for p in self.players if p.is_alive)
+
+                if self.view is None:
+                    self.logger.error("self.view is None")
+                    await interaction.response.send_message(
+                        "内部エラーが発生しました。", ephemeral=True
+                    )
+                    return
 
                 if interaction.user.id in self.view.votes:
                     await interaction.response.send_message(
@@ -107,6 +115,9 @@ class GenericSelect(Select):
                         "生存しているプレイヤーだけが投票できます", ephemeral=True
                     )
                     return
+
+                selected_user_id: Optional[int]
+
                 if self.values[0] == "skip":
                     selected_user_id = None
                     await interaction.response.send_message(
@@ -117,14 +128,23 @@ class GenericSelect(Select):
                     await interaction.response.send_message(
                         f"<@!{selected_user_id}> に投票しました。", ephemeral=True
                     )
+
                 self.view.votes[interaction.user.id] = selected_user_id
 
                 if len(self.view.votes) == len(self.players):
-                    await interaction.message.edit(view=None)
+                    if interaction.message is not None:  # None チェックを追加
+                        await interaction.message.edit(view=None)
                     self.view.stop()
 
             elif self.process == "Ability":
-                selected_user_id = (
+                if self.view is None:
+                    self.logger.error("self.view is None")
+                    await interaction.response.send_message(
+                        "内部エラーが発生しました。", ephemeral=True
+                    )
+                    return
+
+                selected_user_id: Optional[int] = (
                     int(self.values[0]) if self.values[0] != "skip" else None
                 )
                 self.view.votes[interaction.user.id] = selected_user_id
@@ -138,7 +158,8 @@ class GenericSelect(Select):
                         "スキップしました。", ephemeral=True
                     )
 
-                await interaction.message.edit(view=None)
+                if interaction.message is not None:
+                    await interaction.message.edit(view=None)
                 self.view.stop()
         else:
             self.logger.warning(f"Not selected by {interaction.user.id}")
