@@ -17,11 +17,12 @@ class Fox(Role):
 
     async def seer_ability(self, game_id: int, player: Player):
         """
-        占い師に占われたときこのプレイヤーを呪殺する
+        占い師に占われたときこのプレイヤーを呪殺する。
+
         Parameters
         ----------
         game_id : int
-            ゲームのI
+            ゲームのID
         player : Player
             この役職のプレイヤー情報
         """

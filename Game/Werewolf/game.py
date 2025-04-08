@@ -12,6 +12,10 @@ from Modules.Views.JoinView import JoinView
 
 @dataclass
 class WerewolfGame:
+    """
+    ゲームの情報を保持するクラス。
+    """
+
     # 以下ゲーム募集情報
     id: int
     host_id: int
@@ -40,11 +44,26 @@ class WerewolfGame:
     winner: list[player.Player] = field(default_factory=list)
 
     def refresh_alive_players(self):
+        """
+        生存しているプレイヤーを更新する。
+        """
+
         self.alive_players = [p for p in self.players if p.is_alive]
 
     async def update_recruiting_embed(
         self, interaction: Optional[discord.Interaction] = None, show_view: bool = True
     ) -> discord.Embed:
+        """
+        募集用のEmbedを更新する。
+
+        Parameters
+        ----------
+        interaction : discord.Interaction, optional
+            インタラクションオブジェクト
+        show_view : bool, optional
+            募集用のボタンを表示するかどうか
+        """
+
         t = self.translator
 
         embed = discord.Embed(
@@ -81,10 +100,18 @@ class WerewolfGame:
             await message.edit(embed=embed, view=view)
 
     def delete(self):
+        """
+        ゲームを削除する。
+        """
+
         del g.werewolf_games[self.id]
         self.logger.info(f"Game {self.id} deleted.")
 
     async def start(self):
+        """
+        ゲームを開始する。
+        """
+
         self.is_started = True
         await main.main(self.id)
         self.logger.info(f"Game {self.id} started.")
