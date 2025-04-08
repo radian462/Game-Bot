@@ -21,7 +21,7 @@ class Teruteru(Role):
         player : Player
             この役職のプレイヤー情報
         """
-        await EndManager(game_id).main(
+        await EndManager(game_id).game_end(
             team="TeamTeruteru",
             winners=[player],
         )

@@ -119,18 +119,11 @@ class WerewolfManager:
         """
         return await EndManager(self.id).win_check()
 
-    async def game_end(self, team: str, winners: list[player.Player]) -> None:
+    async def execute_game_end(self) -> None:
         """
-        ゲーム終了時の処理を実施する。
-
-        Parameters
-        ----------
-        team: str
-            勝利した陣営の名称
-        winners: list[player.Player]
-            勝利したプレイヤーのリスト
+        ゲーム終了時の処理。
         """
-        await EndManager(self.id).main(team, winners)
+        await EndManager(self.id).execute_game_end()
 
 
 class NightManager:
@@ -419,31 +412,19 @@ class EndManager:
         self.logger = make_logger("EndManager", id)
         self.t = self.game.translator
 
-    async def main(self, team: str, winners: list[player.Player]) -> None:
+    async def execute_game_end(self) -> None:
         """
         ゲーム終了時に勝利結果を送信し、ゲームインスタンスを削除する。
-
-        Parameters
-        ----------
-        team: str
-            勝利した陣営の名称
-        winners: list[player.Player]
-            勝利したプレイヤーのリスト
         """
-        await self._send_result(team, winners)
+        await self._send_result()
         self.game.delete()
 
-    async def win_check(self) -> bool:
+    async def win_check(self) -> None:
         """
         ゲームの勝利条件を判定する。
         人狼の人数が生存者の半数以上なら人狼勝利、
         人狼がいなければ村人勝利、
         さらに妖狐(Fox)が生存している場合は狐勝利に上書きする。
-
-        Returns
-        -------
-        bool
-            勝者が決まった場合はTrue、そうでない場合はFalse。
         """
         if self._is_werewolf_win():
             self.game.win_team = "TeamWerewolf"
@@ -459,8 +440,7 @@ class EndManager:
             self.game.winner = [
                 p for p in self.game.players if p.role.team == self.game.win_team
             ]
-            await self.main(self.game.win_team, self.game.winner)
-            return True
+            self.game.is_ended = True
 
     def _is_werewolf_win(self) -> bool:
         """
@@ -504,24 +484,24 @@ class EndManager:
         else:
             return False
 
-    async def _send_result(self, team: str, winners: list[player.Player]) -> None:
+    async def _send_result(self) -> None:
         """
         ゲームの最終結果を全体チャンネルに通知する。
         勝利陣営と勝者リスト、各プレイヤーの最終ステータス・役職情報を送信する。
         """
         embed = discord.Embed(
             title="人狼ゲーム",
-            description=f"{self.t.getstring(team)}勝利",
+            description=f"{self.t.getstring(self.game.win_team)}勝利",
             color=0xFFD700,
         )
         embed.add_field(
             name="勝者",
-            value="\n".join([f"<@!{player.id}>" for player in winners]),
+            value="\n".join([f"<@!{player.id}>" for player in self.game.winners]),
             inline=False,
         )
         await self.game.channel.send(embed=embed)
 
-        self.logger.info(f"Game has ended. Winners: {winners}")
+        self.logger.info(f"Game has ended. Winners: {self.game.winners}")
 
         result_embed = discord.Embed(
             title="人狼ゲーム",
@@ -536,3 +516,19 @@ class EndManager:
             inline=False,
         )
         await self.game.channel.send(embed=result_embed)
+
+    async def game_end(self, team: str, winners: list[player.Player]) -> None:
+        """
+        ゲームを終了させる。
+
+        Parameters
+        ----------
+        team: str
+            勝利した陣営の名称
+        winners: list[player.Player]
+            勝利したプレイヤーのリスト
+        """
+        self.game.is_ended = True
+        self.game.win_team = team
+        self.game.winners = winners
+

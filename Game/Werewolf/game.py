@@ -14,6 +14,37 @@ from Modules.Views.JoinView import JoinView
 class WerewolfGame:
     """
     ゲームの情報を保持するクラス。
+
+    Attributes
+    ----------
+    id : int
+        ゲームのID
+    host_id : int
+        ホストのID
+    limit : int
+        参加人数の上限
+    message : discord.Message
+        募集メッセージ
+    channel : discord.TextChannel
+        募集メッセージのチャンネル
+    client : discord.Client
+        Discordクライアント
+    joinview : JoinView
+        募集用のボタン
+    logger : logging.LoggerAdapter
+        ロガー
+    translator : Translator
+        翻訳クラス
+    is_started : bool
+        ゲームが開始されたかどうか
+    participant_ids : set[int]
+        参加者のIDのセット
+    turns : int
+        ターン数
+    players : list[player.Player]
+        プレイヤーのリスト
+    alive_players : list[player.Player]
+        生存しているプレイヤーのリスト
     """
 
     # 以下ゲーム募集情報
@@ -28,6 +59,7 @@ class WerewolfGame:
     translator: Translator
 
     is_started: bool = False
+    is_ended: bool = False
 
     # 以下ゲーム進行情報
     participant_ids: set[int] = field(default_factory=set)

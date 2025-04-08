@@ -3,17 +3,21 @@ import discord
 from Game.Werewolf import manager
 
 
-async def main(game: dict):
-    werewolf_manager = manager.WerewolfManager(game)
+async def main(id: int):
+    werewolf_manager = manager.WerewolfManager(id)
     await werewolf_manager.game_start()
 
     while True:
         await werewolf_manager.night()
 
-        if await werewolf_manager.win_check():
+        await werewolf_manager.win_check()
+        if werewolf_manager.game.is_ended:
             break
 
         await werewolf_manager.day()
 
-        if await werewolf_manager.win_check():
+        await werewolf_manager.win_check()
+        if werewolf_manager.game.is_ended:
             break
+
+    await werewolf_manager.execute_game_end()
