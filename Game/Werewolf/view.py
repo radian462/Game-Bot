@@ -96,7 +96,7 @@ class GenericSelect(Select):
             self.logger.info(f"{interaction.user.id} selected {self.values[0]}")
 
             selected_user_id: int | None
-            
+
             if self.process == "Execute":
                 alive_player_ids = (p.id for p in self.players if p.is_alive)
 
