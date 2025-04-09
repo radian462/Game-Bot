@@ -83,7 +83,7 @@ class WerewolfGame:
 
     async def update_recruiting_embed(
         self, interaction: discord.Interaction | None = None, show_view: bool = True
-    ) -> discord.Embed:
+    ) -> None:
         """
         募集用のEmbedを更新する。
 
@@ -127,8 +127,11 @@ class WerewolfGame:
             await interaction.response.edit_message(embed=embed, view=view)
         else:
             channel = self.client.get_channel(self.channel.id)
-            message = await channel.fetch_message(self.message.id)
-            await message.edit(embed=embed, view=view)
+            if isinstance(channel, discord.TextChannel):
+                message = await channel.fetch_message(self.message.id)
+                await message.edit(embed=embed, view=view)
+            else:
+                self.logger.warning("channel is not a TextChannel. Cannot fetch message.")
 
     def delete(self):
         """

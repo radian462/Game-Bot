@@ -548,4 +548,4 @@ class EndManager:
         if self.game is not None:
             self.game.is_ended = True
             self.game.win_team = team
-            self.game.winners = winners
+            self.game.winner = winners

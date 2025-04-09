@@ -53,11 +53,16 @@ roles = {role.name: role for role in role_classes}
 @tree.command(name="werewolf", description="人狼ゲームをプレイします")
 @app_commands.describe(limit="人数制限")
 @discord.app_commands.choices(
-    limit=[discord.app_commands.Choice(name=i, value=i) for i in range(3, 16)]
+    limit=[discord.app_commands.Choice(name=str(i), value=i) for i in range(3, 16)]
 )
 @discord.app_commands.guild_only()
 async def werewolf(interaction: discord.Interaction, limit: int = 10):
     logger.info(f"{interaction.user.id} created a game.")
+
+    if not isinstance(interaction.channel, discord.TextChannel):
+        await interaction.response.send_message("このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True)
+        return
+
     try:
         id = int(uuid.uuid4().int)
 
@@ -91,11 +96,16 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
         discord.app_commands.Choice(name=t.getstring(r.name), value=r.name)
         for r in roles.values()
     ],
-    number=[discord.app_commands.Choice(name=i, value=i) for i in range(0, 15)],
+    number=[discord.app_commands.Choice(name=str(i), value=i) for i in range(0, 15)],
 )
 @discord.app_commands.guild_only()
 async def set_role(interaction: discord.Interaction, role: str, number: int):
     logger.info(f"{interaction.user.id} set {role} to {number}.")
+
+    if interaction.channel is None or not isinstance(interaction.channel, discord.TextChannel):
+        await interaction.response.send_message("このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True)
+        return
+    
     try:
         # ゲームの中で募集中かつあなたのゲームでこのチャンネル内であるゲームを取得
         recruiting_games = [
@@ -125,4 +135,9 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
 
 
 load_dotenv()
-client.run(os.getenv("DISCORD_TOKEN"))
+token = os.getenv("DISCORD_TOKEN")
+if token is None:
+    raise RuntimeError("DISCORD_TOKEN is not found.")
+
+client.run(token)
+
