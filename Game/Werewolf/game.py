@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
 
 import discord
 
@@ -72,7 +71,7 @@ class WerewolfGame:
     roles: dict[role.Role, int] = field(default_factory=dict)
     assigned_roles: list[role.Role] = field(default_factory=list)
 
-    win_team: Optional[str] = None
+    win_team: str | None = None
     winner: list[player.Player] = field(default_factory=list)
 
     def refresh_alive_players(self):
@@ -83,16 +82,16 @@ class WerewolfGame:
         self.alive_players = [p for p in self.players if p.is_alive]
 
     async def update_recruiting_embed(
-        self, interaction: Optional[discord.Interaction] = None, show_view: bool = True
+        self, interaction: discord.Interaction | None = None, show_view: bool = True
     ) -> discord.Embed:
         """
         募集用のEmbedを更新する。
 
         Parameters
         ----------
-        interaction : discord.Interaction, optional
+        interaction : discord.Interaction | None
             インタラクションオブジェクト
-        show_view : bool, optional
+        show_view : bool
             募集用のボタンを表示するかどうか
         """
 

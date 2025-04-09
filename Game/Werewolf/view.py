@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import discord
 from discord.ui import Select, View
@@ -55,7 +55,7 @@ class PlayerChoiceView(discord.ui.View):
     ) -> None:
         super().__init__()
         self.choices = choices
-        self.votes: dict[int, Optional[int]] = {}
+        self.votes: dict[int, int | None] = {}
         self.process = process
         self.options = [
             discord.SelectOption(label=choice.name, value=choice.id)
@@ -89,7 +89,7 @@ class GenericSelect(Select):
         self.game = g.werewolf_games[game_id]
         self.logger = self.game.logger
         self.t = self.game.translator
-        self.view: Optional[PlayerChoiceView] = None
+        self.view: PlayerChoiceView | None = None
 
     async def callback(self, interaction: discord.Interaction) -> None:
         if self.values:
@@ -116,7 +116,7 @@ class GenericSelect(Select):
                     )
                     return
 
-                selected_user_id: Optional[int]
+                selected_user_id: int | None
 
                 if self.values[0] == "skip":
                     selected_user_id = None
@@ -144,7 +144,7 @@ class GenericSelect(Select):
                     )
                     return
 
-                selected_user_id: Optional[int] = (
+                selected_user_id: int | None = (
                     int(self.values[0]) if self.values[0] != "skip" else None
                 )
                 self.view.votes[interaction.user.id] = selected_user_id

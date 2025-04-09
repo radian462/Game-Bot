@@ -1,7 +1,7 @@
 import os
 import traceback
 import uuid
-from typing import Final, Optional
+from typing import Final
 
 import discord
 from discord import app_commands
@@ -11,7 +11,8 @@ import Modules.global_value as g
 from Game.Werewolf.game import WerewolfGame
 from Game.Werewolf.role import Bakery, Medium, Werewolf
 from Game.Werewolf.Roles.Neutral import Fox, Teruteru
-from Game.Werewolf.Roles.Villiger import BlackCat, Hunter, Madmate, Nekomata, Seer
+from Game.Werewolf.Roles.Villiger import (BlackCat, Hunter, Madmate, Nekomata,
+                                          Seer)
 from Modules.logger import make_logger
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView

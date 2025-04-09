@@ -2,7 +2,6 @@ import asyncio
 import random
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Optional
 
 import discord
 
@@ -133,11 +132,11 @@ class NightManager:
 
     parameters
     ----------
-    id: Optional[int]
+    id: int | None
         ゲームID。Noneの場合は新規ゲームとして扱う。
     """
 
-    def __init__(self, id: Optional[int] = None) -> None:
+    def __init__(self, id: int | None = None) -> None:
         self.id = id
         self.game = g.werewolf_games.get(id)
         self.logger = make_logger("NightManager", id)
@@ -271,11 +270,11 @@ class DayManager:
 
     parameters
     ----------
-    id: Optional[int]
+    id: int | None
         ゲームID。Noneの場合は新規ゲームとして扱う。
     """
 
-    def __init__(self, id: Optional[int] = None) -> None:
+    def __init__(self, id: int | None = None) -> None:
         self.id = id
         self.game = g.werewolf_games.get(id)
         self.logger = make_logger("DayManager", id)
@@ -402,11 +401,11 @@ class EndManager:
 
     parameters
     ----------
-    id: Optional[int]
+    id: int | None
         ゲームID。Noneの場合は新規ゲームとして扱う。
     """
 
-    def __init__(self, id: Optional[int] = None) -> None:
+    def __init__(self, id: int | None = None) -> None:
         self.id = id
         self.game = g.werewolf_games.get(id)
         self.logger = make_logger("EndManager", id)

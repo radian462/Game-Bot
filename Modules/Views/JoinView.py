@@ -1,5 +1,5 @@
 import traceback
-from typing import Final, TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import discord
 
