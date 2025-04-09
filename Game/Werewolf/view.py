@@ -95,6 +95,8 @@ class GenericSelect(Select):
         if self.values:
             self.logger.info(f"{interaction.user.id} selected {self.values[0]}")
 
+            selected_user_id: int | None
+            
             if self.process == "Execute":
                 alive_player_ids = (p.id for p in self.players if p.is_alive)
 
@@ -115,8 +117,6 @@ class GenericSelect(Select):
                         "生存しているプレイヤーだけが投票できます", ephemeral=True
                     )
                     return
-
-                selected_user_id: int | None
 
                 if self.values[0] == "skip":
                     selected_user_id = None
@@ -144,7 +144,7 @@ class GenericSelect(Select):
                     )
                     return
 
-                selected_user_id: int | None = (
+                selected_user_id = (
                     int(self.values[0]) if self.values[0] != "skip" else None
                 )
                 self.view.votes[interaction.user.id] = selected_user_id
