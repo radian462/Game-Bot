@@ -60,7 +60,9 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
     logger.info(f"{interaction.user.id} created a game.")
 
     if not isinstance(interaction.channel, discord.TextChannel):
-        await interaction.response.send_message("このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True)
+        await interaction.response.send_message(
+            "このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True
+        )
         return
 
     try:
@@ -102,10 +104,14 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
 async def set_role(interaction: discord.Interaction, role: str, number: int):
     logger.info(f"{interaction.user.id} set {role} to {number}.")
 
-    if interaction.channel is None or not isinstance(interaction.channel, discord.TextChannel):
-        await interaction.response.send_message("このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True)
+    if interaction.channel is None or not isinstance(
+        interaction.channel, discord.TextChannel
+    ):
+        await interaction.response.send_message(
+            "このコマンドはテキストチャンネルでのみ使用できます。", ephemeral=True
+        )
         return
-    
+
     try:
         # ゲームの中で募集中かつあなたのゲームでこのチャンネル内であるゲームを取得
         recruiting_games = [
@@ -140,4 +146,3 @@ if token is None:
     raise RuntimeError("DISCORD_TOKEN is not found.")
 
 client.run(token)
-

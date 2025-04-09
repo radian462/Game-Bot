@@ -30,7 +30,7 @@ class Seer(Role):
 
         if game is not None:
             self.t = game.translator
-    
+
             embed = discord.Embed(title="占い", description="占い対象を選んでください")
             view = PlayerChoiceView(
                 choices=game.last_alive_players,
@@ -40,7 +40,7 @@ class Seer(Role):
             )
             await player.message(embed=embed, view=view)
             await view.wait()
-    
+
             target_id = list(view.votes.values())[0]
             target = next((p for p in game.players if p.id == target_id), None)
 

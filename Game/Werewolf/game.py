@@ -131,7 +131,9 @@ class WerewolfGame:
                 message = await channel.fetch_message(self.message.id)
                 await message.edit(embed=embed, view=view)
             else:
-                self.logger.warning("channel is not a TextChannel. Cannot fetch message.")
+                self.logger.warning(
+                    "channel is not a TextChannel. Cannot fetch message."
+                )
 
     def delete(self):
         """

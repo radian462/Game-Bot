@@ -76,7 +76,9 @@ class WerewolfManager:
             # 各プレイヤーに役職を順次割り当て、ログにも記録する
             for i, r in enumerate(self.game.assigned_roles):
                 self.game.players[i].assign_role(r)
-                self.logger.info(f"{self.game.players[i].id} has been assigned {r.name}")
+                self.logger.info(
+                    f"{self.game.players[i].id} has been assigned {r.name}"
+                )
 
     async def _notify_roles(self) -> None:
         """
@@ -121,7 +123,7 @@ class WerewolfManager:
         """
         if self.game is not None:
             await EndManager(self.id).win_check()
-        
+
     async def execute_game_end(self) -> None:
         """
         ゲーム終了時の処理。
@@ -213,31 +215,38 @@ class NightManager:
             if self.game.turns != 0:
                 results = await self.kill_votes()
                 target_id = self._decide_kill_target(results)
+
+                if target_id is None:
+                    self.logger.info("No valid kill target was decided. Skipping kill.")
+                    return
+
                 target_player = next(
                     p for p in self.game.last_alive_players if p.id == target_id
                 )
                 await self._announce_kill(target_player)
                 target_player.kill()
-                self.logger.info(f"Werewolfs {target_player.id} tried to kill a target.")
+                self.logger.info(
+                    f"Werewolfs {target_player.id} tried to kill a target."
+                )
 
-    def _decide_kill_target(self, results: list[int]) -> int | None:
-        """
-        複数の人狼からの投票結果から、襲撃対象を決定する。
-        最も多く票を得たプレイヤー（複数候補の場合はランダムに選択）を返す。
-        """
+    def _decide_kill_target(self, results: list[int | None]) -> int | None:
         counter = Counter(results)
         max_count = max(counter.values(), default=0)
         modes = [key for key, count in counter.items() if count == max_count]
 
-        return random.choice(modes) if modes else None
+        if not modes:
+            self.logger.warning("Kill target is not found.")
+        
+        return random.choice(modes)
 
-    async def kill_votes(self) -> list[int]:
+
+    async def kill_votes(self) -> list[int | None]:
         """
         人狼側プレイヤーからの襲撃対象投票を実施する。
         各プレイヤーに対してDMで投票を促し、その結果をリストとして返す。
         """
 
-        async def wait_for_vote(player: player.Player) -> int:
+        async def wait_for_vote(player: player.Player) -> int | None:
             embed = discord.Embed(
                 title="キル投票", description="襲撃対象を選んでください"
             )
@@ -374,7 +383,9 @@ class DayManager:
         対象が決定しなかった場合は処刑をスキップする。
         """
         if self.game is not None:
-            embed = discord.Embed(title="処刑投票", description="処刑対象を選んでください")
+            embed = discord.Embed(
+                title="処刑投票", description="処刑対象を選んでください"
+            )
             view = PlayerChoiceView(
                 choices=self.game.alive_players,
                 process="Execute",
@@ -394,10 +405,12 @@ class DayManager:
                 self.logger.info(f"Nobody was executed.")
             else:
                 # 該当するプレイヤーを検索して処刑処理を実行
-                target_player = [p for p in self.game.alive_players if p.id == execute_id][
-                    0
-                ]
-                await self.game.channel.send(f"<@!{target_player.id}> が処刑されました。")
+                target_player = [
+                    p for p in self.game.alive_players if p.id == execute_id
+                ][0]
+                await self.game.channel.send(
+                    f"<@!{target_player.id}> が処刑されました。"
+                )
 
                 await target_player.execute()
                 self.game.refresh_alive_players()

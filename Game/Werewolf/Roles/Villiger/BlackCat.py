@@ -29,7 +29,7 @@ class BlackCat(Role):
 
         if game is not None:
             filtered_players = [p for p in game.alive_players if p.id != player.id]
-    
+
             revenge_target = random.choice(filtered_players)
             await revenge_target.execute("Revenged")
             game.refresh_alive_players()
