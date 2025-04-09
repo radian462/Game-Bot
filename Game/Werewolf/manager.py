@@ -508,18 +508,18 @@ class EndManager:
         if self.game is not None:
             embed = discord.Embed(
                 title="人狼ゲーム",
-                description=f"{self.t.getstring(self.game.win_team)}勝利",
+                description=f"{self.t.getstring(self.game.win_team or "")}勝利",
                 color=0xFFD700,
             )
             embed.add_field(
                 name="勝者",
-                value="\n".join([f"<@!{player.id}>" for player in self.game.winners]),
+                value="\n".join([f"<@!{player.id}>" for player in self.game.winner]),
                 inline=False,
             )
             await self.game.channel.send(embed=embed)
-    
-            self.logger.info(f"Game has ended. Winners: {self.game.winners}")
-    
+
+            self.logger.info(f"Game has ended. Winners: {self.game.winner}")
+
             result_embed = discord.Embed(
                 title="人狼ゲーム",
                 color=0xFFD700,
@@ -545,6 +545,7 @@ class EndManager:
         winners: list[player.Player]
             勝利したプレイヤーのリスト
         """
-        self.game.is_ended = True
-        self.game.win_team = team
-        self.game.winners = winners
+        if self.game is not None:
+            self.game.is_ended = True
+            self.game.win_team = team
+            self.game.winners = winners
