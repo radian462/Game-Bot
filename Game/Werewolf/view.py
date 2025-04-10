@@ -89,7 +89,6 @@ class GenericSelect(Select):
         self.game = g.werewolf_games[game_id]
         self.logger = self.game.logger
         self.t = self.game.translator
-        self.view: PlayerChoiceView | None = None
 
     async def callback(self, interaction: discord.Interaction) -> None:
         if self.values:
