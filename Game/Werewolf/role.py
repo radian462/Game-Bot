@@ -1,8 +1,4 @@
-import tomllib
 from typing import Final
-
-with open("Resources/role_description.toml", "rb") as f:
-    ROLE_DESCRIPTIONS: Final = tomllib.load(f)
 
 
 class Role:
@@ -17,13 +13,6 @@ class Role:
         self.description = ""
 
         self.is_kill_protected = False
-
-    def initialize_role(self):
-        self.name = self.__class__.__name__
-        self.team = ROLE_DESCRIPTIONS[self.name]["Team"]
-        self.fortune_result = ROLE_DESCRIPTIONS[self.name]["FortuneResult"]
-        self.win_condition = ROLE_DESCRIPTIONS[self.name]["WinCondition"]
-        self.description = ROLE_DESCRIPTIONS[self.name]["Description"]
 
     async def night_ability(self, game_id: int, player):
         # 夜行動の記述
