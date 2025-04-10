@@ -69,7 +69,7 @@ class JoinView(discord.ui.View):
             self.game.participant_ids.add(interaction.user.id)
             await self.game.update_recruiting_embed(interaction)
         except Exception as e:
-            traceback.print_exc()
+            logger.error("An error occurred", exc_info=True)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="退出", style=discord.ButtonStyle.red)
@@ -105,7 +105,7 @@ class JoinView(discord.ui.View):
             self.game.participant_ids.remove(interaction.user.id)
             await self.game.update_recruiting_embed(interaction)
         except Exception as e:
-            traceback.print_exc()
+            logger.error("An error occurred", exc_info=True)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="開始", style=discord.ButtonStyle.primary)
@@ -133,7 +133,7 @@ class JoinView(discord.ui.View):
             await self.game.update_recruiting_embed(interaction, show_view=False)
             await self.game.start()
         except Exception as e:
-            traceback.print_exc()
+            logger.error("An error occurred", exc_info=True)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
     @discord.ui.button(label="中止", style=discord.ButtonStyle.grey)
@@ -169,5 +169,5 @@ class JoinView(discord.ui.View):
 
             logger.info(f"Game {self.game.id} ended by host {interaction.user.id}.")
         except Exception as e:
-            traceback.print_exc()
+            logger.error("An error occurred", exc_info=True)
             await interaction.response.send_message(ERROR_TEMPLATE + str(e))

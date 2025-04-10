@@ -95,7 +95,7 @@ async def werewolf(interaction: discord.Interaction, limit: int = 10):
         g.werewolf_games[id] = game
         await game.update_recruiting_embed()
     except Exception as e:
-        traceback.print_exc()
+        logger.error("An error occurred", exc_info=True)
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
 
@@ -144,7 +144,7 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
 
             await setting_game.update_recruiting_embed()
     except Exception as e:
-        traceback.print_exc()
+        logger.error("An error occurred", exc_info=True)
         await interaction.response.send_message(ERROR_TEMPLATE + str(e))
 
 
