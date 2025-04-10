@@ -13,8 +13,6 @@ class Teruteru(Role):
         self.description = "TeruteruDescription"
         self.win_condition = "TeruteruWinCondition"
 
-        self.initialize_role()
-
     async def executed_ability(self, game_id: int, player):
         """
         自分が処刑されたときに、勝利する。
