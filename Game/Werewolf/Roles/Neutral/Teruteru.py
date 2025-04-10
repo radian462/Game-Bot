@@ -7,6 +7,12 @@ class Teruteru(Role):
         super().__init__()
         self.is_neutral = True
 
+        self.name = self.__class__.__name__
+        self.team = "TeamTeruteru"
+        self.fortune_result = "TeamNeutral"
+        self.description = "TeruteruDescription"
+        self.win_condition = "TeruteruWinCondition"
+
         self.initialize_role()
 
     async def executed_ability(self, game_id: int, player):

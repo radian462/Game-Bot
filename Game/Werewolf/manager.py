@@ -7,6 +7,7 @@ import discord
 
 import Modules.global_value as g
 from Game.Werewolf import player, role
+from Game.Werewolf.Roles.Villager import Villager
 from Game.Werewolf.view import PlayerChoiceView, RoleInfoView
 from Modules.logger import make_logger
 
@@ -62,7 +63,7 @@ class WerewolfManager:
 
             # プレイヤー数に足りなければ、村人役を追加する
             while len(self.game.assigned_roles) < len(self.game.players):
-                self.game.assigned_roles.append(role.Villager())
+                self.game.assigned_roles.append(Villager.Villager())
 
             # 役職リストをシャッフルしてランダムな割り当てにする
             random.shuffle(self.game.assigned_roles)
@@ -236,9 +237,8 @@ class NightManager:
 
         if not modes:
             self.logger.warning("Kill target is not found.")
-        
-        return random.choice(modes)
 
+        return random.choice(modes)
 
     async def kill_votes(self) -> list[int | None]:
         """

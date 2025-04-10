@@ -10,7 +10,11 @@ class Nekomata(Role):
         super().__init__()
         self.is_villager = True
 
-        self.initialize_role()
+        self.name = self.__class__.__name__
+        self.team = "TeamVillager"
+        self.fortune_result = "TeamVillager"
+        self.description = "NekomataDescription"
+        self.win_condition = "VillagerWinCondition"
 
     async def executed_ability(self, game_id: int, player):
         """

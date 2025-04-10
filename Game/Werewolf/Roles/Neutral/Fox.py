@@ -11,7 +11,11 @@ class Fox(Role):
         super().__init__()
         self.is_neutral = True
 
-        self.initialize_role()
+        self.name = self.__class__.__name__
+        self.team = "TeamFox"
+        self.fortune_result = "TeamNeutral"
+        self.description = "FoxDescription"
+        self.win_condition = "FoxWinCondition"
 
         self.is_kill_protected = True
 

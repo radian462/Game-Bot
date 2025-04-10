@@ -7,22 +7,25 @@ from ...role import Role
 from ...view import PlayerChoiceView
 
 
-class Hunter(Role):
+class Seer(Role):
     def __init__(self):
         super().__init__()
         self.is_villager = True
 
-        self.initialize_role()
+        self.name = self.__class__.__name__
+        self.team = "TeamVillager"
+        self.fortune_result = "TeamVillager"
+        self.description = "SeerDescription"
+        self.win_condition = "VillagerWinCondition"
 
     async def night_ability(self, game_id: int, player: Player):
         """
-        護衛対象を選ぶ。
+        占い対象を選ぶ。
 
         Parameters
         ----------
         game_id : int
             ゲームのID
-
         player : Player
             この役職のプレイヤー情報
         """
@@ -32,7 +35,7 @@ class Hunter(Role):
         if game is not None:
             self.t = game.translator
 
-            embed = discord.Embed(title="護衛", description="護衛対象を選んでください")
+            embed = discord.Embed(title="占い", description="占い対象を選んでください")
             view = PlayerChoiceView(
                 choices=game.last_alive_players,
                 process="Ability",
@@ -46,5 +49,8 @@ class Hunter(Role):
             target = next((p for p in game.players if p.id == target_id), None)
 
             if target is not None:
-                target.is_kill_protected = True
-                await player.message(f"{target.name}を守ります。")
+                await player.message(
+                    f"{target.name}は{self.t.getstring(target.role.name)}です。"
+                )
+
+                await target.role.seer_ability(game_id, target)

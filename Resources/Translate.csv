@@ -15,6 +15,26 @@ BlackCat,黒猫
 Teruteru,てるてる
 Fox,妖狐
 
+# 勝利条件
+VillagerWinCondition,キル能力を持つ役職を全滅させる。
+WerewolfWinCondition,人狼以外のキル能力を持つ役職を全滅させて、人狼の人数が生存者の半分以上になること。
+MadmateWinCondition,人狼の勝利。
+TeruteruWinCondition,処刑される。
+FoxWinCondition,ゲーム終了時まで生存する。
+
+# 説明
+VillagerDescription,特別な能力を持たない役職です。\n積極的に議論に参加し、村を平和に導きましょう。
+SeerDescription,毎晩、生存者の中から1人を占い、その人の陣営を知ることができます。
+MediumDescription,毎晩、処刑された人を占い、その人の陣営を知ることができます。
+HunterDescription,毎晩、他のプレイヤー1人を人狼の襲撃から守ることができます。
+BakeryDescription,毎朝、生存している場合パンを配り、パン屋が生存していることを村に知らせます。
+NekomataDescription,追放されたとき、ランダムなプレイヤーを道連れで追放します。
+WerewolfDescription,毎晩、襲撃するプレイヤーを決めてその人を襲撃することができます。\n襲撃されたプレイヤーは死亡します。村人を全滅させて村を滅ぼしましょう。
+MadmateDescription,村人ですが、人狼の味方です。\nうまく議論をそらして、人狼を守りましょう。
+BlackCatDescription,村人ですが、人狼の味方です。\n処刑されたときランダムな一人を道連れで処刑する事ができます。\nうまく議論をそらして、人狼を守りましょう。
+TeruteruDescription,村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は処刑されること。うまく議論を操り、処刑されましょう。
+FoxDescription,村人でも人狼でもない、独自の目的を持つ1人だけの陣営です。\nあなたの目的は生き延びること。人狼から襲撃を受けても死亡しませんが、占い師に占われると呪殺されます。生き延びるために、うまく立ち回りましょう。
+
 # 陣営
 TeamVillager,村人陣営
 TeamWerewolf,人狼陣営

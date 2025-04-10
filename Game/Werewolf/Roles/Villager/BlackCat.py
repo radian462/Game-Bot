@@ -10,7 +10,11 @@ class BlackCat(Role):
         super().__init__()
         self.is_villager = True
 
-        self.initialize_role()
+        self.name = self.__class__.__name__
+        self.team = "TeamWerewolf"
+        self.fortune_result = "TeamVillager"
+        self.description = "BlackCatDescription"
+        self.win_condition = "MadmateWinCondition"
 
     async def executed_ability(self, game_id: int, player):
         """

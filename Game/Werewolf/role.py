@@ -40,37 +40,3 @@ class Role:
     async def executed_ability(self, game_id: int, player):
         # 処刑されたときの記述
         pass
-
-
-# 村人陣営
-class Villager(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
-class Medium(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
-class Bakery(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_villager = True
-
-        self.initialize_role()
-
-
-# 人狼陣営
-class Werewolf(Role):
-    def __init__(self):
-        super().__init__()
-        self.is_werewolf = True
-
-        self.initialize_role()

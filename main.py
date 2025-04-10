@@ -9,9 +9,10 @@ from dotenv import load_dotenv
 
 import Modules.global_value as g
 from Game.Werewolf.game import WerewolfGame
-from Game.Werewolf.role import Bakery, Medium, Werewolf
 from Game.Werewolf.Roles.Neutral import Fox, Teruteru
-from Game.Werewolf.Roles.Villiger import BlackCat, Hunter, Madmate, Nekomata, Seer
+from Game.Werewolf.Roles.Villager import (Bakery, BlackCat, Hunter, Madmate,
+                                          Medium, Nekomata, Seer)
+from Game.Werewolf.Roles.Werewolf import Werewolf
 from Modules.logger import make_logger
 from Modules.translator import Translator
 from Modules.Views.JoinView import JoinView
@@ -36,11 +37,11 @@ async def on_ready():
 # 役職のインスタンスを作成するリスト
 role_classes = [
     Seer.Seer(),
-    Medium(),
+    Medium.Medium(),
     Hunter.Hunter(),
-    Bakery(),
+    Bakery.Bakery(),
     Nekomata.Nekomata(),
-    Werewolf(),
+    Werewolf.Werewolf(),
     Madmate.Madmate(),
     BlackCat.BlackCat(),
     Teruteru.Teruteru(),
