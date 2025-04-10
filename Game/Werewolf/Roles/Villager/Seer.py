@@ -50,7 +50,7 @@ class Seer(Role):
 
             if target is not None:
                 await player.message(
-                    f"{target.name}は{self.t.getstring(target.role.name)}です。"
+                    f"{target.name}は{self.t.getstring(target.role.fortune_result)}です。"
                 )
 
                 await target.role.seer_ability(game_id, target)
