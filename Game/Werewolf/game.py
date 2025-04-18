@@ -121,7 +121,7 @@ class WerewolfGame:
             inline=False,
         )
 
-        view = self.joinview if show_view == True else None
+        view = self.joinview if show_view else None
 
         if interaction:
             await interaction.response.edit_message(embed=embed, view=view)

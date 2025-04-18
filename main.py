@@ -1,5 +1,4 @@
 import os
-import traceback
 import uuid
 from typing import Final
 
@@ -38,7 +37,7 @@ ERROR_TEMPLATE: Final = "エラーが発生しました\n"
 @client.event
 async def on_ready():
     await tree.sync()
-    logger.info(f"Successed to Log in")
+    logger.info("Successed to Log in")
 
 
 # 役職のインスタンスを作成するリスト
@@ -123,7 +122,7 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
     try:
         # ゲームの中で募集中かつあなたのゲームでこのチャンネル内であるゲームを取得
         recruiting_games = [
-            game for game in g.werewolf_games.values() if game.is_started == False
+            game for game in g.werewolf_games.values() if not game.is_started
         ]
         your_games = [
             game for game in recruiting_games if game.host_id == interaction.user.id

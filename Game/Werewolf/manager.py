@@ -1,12 +1,11 @@
 import asyncio
 import random
 from collections import Counter
-from dataclasses import dataclass, field
 
 import discord
 
 import Modules.global_value as g
-from Game.Werewolf import player, role
+from Game.Werewolf import player
 from Game.Werewolf.Roles.Villager import Villager
 from Game.Werewolf.view import PlayerChoiceView, RoleInfoView
 from Modules.logger import make_logger
@@ -322,8 +321,8 @@ class DayManager:
         狩人等の能力で保護された状態を初期化するための処理。
         """
         if self.game is not None:
-            for player in self.game.players:
-                player.is_kill_protected = False
+            for p in self.game.players:
+                p.is_kill_protected = False
 
     async def _announce_day_start(self) -> None:
         """
@@ -401,8 +400,8 @@ class DayManager:
             execute_id = self._decide_execute_target(filtered_votes)
 
             if execute_id is None:
-                await self.game.channel.send(f"誰も処刑されませんでした。")
-                self.logger.info(f"Nobody was executed.")
+                await self.game.channel.send("誰も処刑されませんでした。")
+                self.logger.info("Nobody was executed.")
             else:
                 # 該当するプレイヤーを検索して処刑処理を実行
                 target_player = [

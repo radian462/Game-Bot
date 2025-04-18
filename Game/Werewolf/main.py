@@ -1,5 +1,3 @@
-import discord
-
 from Game.Werewolf import manager
 
 

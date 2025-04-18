@@ -1,11 +1,10 @@
 from typing import Literal
 
 import discord
-from discord.ui import Select, View
+from discord.ui import Select
 
 import Modules.global_value as g
-from Game.Werewolf import player, role
-from Modules.translator import Translator
+from Game.Werewolf import player
 
 
 class RoleInfoView(discord.ui.View):

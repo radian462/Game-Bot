@@ -1,6 +1,3 @@
-from typing import Final
-
-
 class Role:
     def __init__(self):
         self.name = ""

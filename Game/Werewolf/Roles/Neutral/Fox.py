@@ -1,7 +1,3 @@
-import discord
-
-import Modules.global_value as g
-
 from ...player import Player
 from ...role import Role
 

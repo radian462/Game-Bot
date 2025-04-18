@@ -1,4 +1,4 @@
-import traceback
+
 from typing import TYPE_CHECKING, Final
 
 import discord
@@ -161,7 +161,7 @@ class JoinView(discord.ui.View):
             self.game.delete()
             await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"人狼ゲーム",
+                    title="人狼ゲーム",
                     description="募集が中止されました",
                     color=discord.Color.red(),
                 )
