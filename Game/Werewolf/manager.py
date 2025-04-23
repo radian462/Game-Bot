@@ -312,6 +312,8 @@ class DayManager:
         ]
 
         await self._announce_day_start()
+        await self._announce_bakery()
+
         await self.execute_vote()
         self.reset_protected()
 
@@ -344,6 +346,19 @@ class DayManager:
         )
         if self.game is not None:
             await self.game.channel.send(embed=embed)
+
+    async def _announce_bakery(self) -> None:
+        """
+        パン屋の能力を持つプレイヤーが生存している場合に、全体に通知する。
+        """
+        if self.game is not None:
+            if any(p for p in self.game.alive_players if p.role.name == "Bakery"):
+                embed = discord.Embed(
+                    title="人狼ゲーム",
+                    description="パンが焼かれました。",
+                    color=0xE59F5C,
+                )
+                await self.game.channel.send(embed=embed)
 
     def _decide_execute_target(self, results: list[int | None]) -> int | None:
         """
