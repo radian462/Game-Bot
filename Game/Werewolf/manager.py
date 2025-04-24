@@ -535,7 +535,7 @@ class EndManager:
         if self.game is not None:
             embed = discord.Embed(
                 title="人狼ゲーム",
-                description=f"{self.t.getstring(self.game.win_team or "")}勝利",
+                description=f"{self.t.getstring(self.game.win_team or '')}勝利",
                 color=0xFFD700,
             )
             embed.add_field(
