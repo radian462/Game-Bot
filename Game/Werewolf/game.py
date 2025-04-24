@@ -71,6 +71,7 @@ class WerewolfGame:
     last_alive_players: list[player.Player] = field(default_factory=list)
     roles: dict[role.Role, int] = field(default_factory=dict)
     assigned_roles: list[role.Role] = field(default_factory=list)
+    last_executed_player: player.Player | None = None
 
     win_team: str | None = None
     winner: list[player.Player] = field(default_factory=list)

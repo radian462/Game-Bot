@@ -1,9 +1,10 @@
 import asyncio
 import random
+import time
 from collections import Counter
 
 import discord
-import time
+
 import Modules.global_value as g
 from Game.Werewolf import player
 from Game.Werewolf.Roles.Villager import Villager
@@ -302,7 +303,8 @@ class DayManager:
         self.id = id
         self.game = g.werewolf_games.get(id)
         self.logger = make_logger("DayManager", id)
-        self.t = self.game.translator
+        if self.game is not None:
+            self.t = self.game.translator
 
         # 当日の夜に死亡したプレイヤーのリスト
         self.today_killed_players: list[player.Player] = []
@@ -445,6 +447,8 @@ class DayManager:
                 )
 
                 await target_player.execute()
+                self.game.last_executed_player = target_player
+
                 self.game.refresh_alive_players()
                 self.logger.info(f"{target_player.id} was executed.")
 
