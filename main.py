@@ -148,8 +148,8 @@ async def set_role(interaction: discord.Interaction, role: str, number: int):
 
 
 load_dotenv()
-token = os.getenv("DISCORD_TOKEN")
-if token is None:
+TOKEN = os.getenv("DISCORD_TOKEN")
+if TOKEN is None:
     raise RuntimeError("DISCORD_TOKEN is not found.")
 
-client.run(token)
+client.run(TOKEN)
