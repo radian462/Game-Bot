@@ -158,12 +158,13 @@ class JoinView(discord.ui.View):
 
             # 募集を中止する
             self.game.delete()
-            await interaction.response.send_message(
+            await interaction.response.edit_message(
                 embed=discord.Embed(
                     title="人狼ゲーム",
                     description="募集が中止されました",
                     color=discord.Color.red(),
-                )
+                ),
+                view=None,
             )
 
             logger.info(f"Game {self.game.id} ended by host {interaction.user.id}.")
