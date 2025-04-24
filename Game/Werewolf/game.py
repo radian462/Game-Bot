@@ -64,6 +64,7 @@ class WerewolfGame:
     participant_ids: set[int] = field(default_factory=set)
 
     turns: int = 0
+    last_night_turn_time: float = 0.0
 
     players: list[player.Player] = field(default_factory=list)
     alive_players: list[player.Player] = field(default_factory=list)

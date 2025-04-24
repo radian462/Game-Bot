@@ -48,3 +48,8 @@ Executed,処刑
 Killed,殺害
 Cursed,呪殺
 Revenged,道連れ
+
+#メッセージ
+BakeryEarlyMessage,生焼けのパンが配られました。
+BakeryNormalMessage,焼きたてのパンが配られました。
+BakeryLateMessage,黒焦げのパンが配られました。

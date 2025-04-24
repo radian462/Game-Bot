@@ -3,7 +3,7 @@ import random
 from collections import Counter
 
 import discord
-
+import time
 import Modules.global_value as g
 from Game.Werewolf import player
 from Game.Werewolf.Roles.Villager import Villager
@@ -156,6 +156,9 @@ class NightManager:
         夜の処理のメインルーチン。
         夜の開始通知、各プレイヤーの夜のアクション実行、襲撃処理、夜の終了通知を順次実施する。
         """
+        # 夜時間の測定
+        start = time.monotonic()
+
         await self._announce_night_start()
         await self.night_ability_time()
         await self.kill_time()
@@ -163,6 +166,9 @@ class NightManager:
         if self.game is not None:
             # 襲撃処理後、現在の生存プレイヤーリストを更新
             self.game.refresh_alive_players()
+
+            end = time.monotonic()
+            self.game.last_night_turn_time = end - start
 
             # ターン数をインクリメントし、夜終了の通知を送信
             self.game.turns += 1
@@ -296,6 +302,7 @@ class DayManager:
         self.id = id
         self.game = g.werewolf_games.get(id)
         self.logger = make_logger("DayManager", id)
+        self.t = self.game.translator
 
         # 当日の夜に死亡したプレイヤーのリスト
         self.today_killed_players: list[player.Player] = []
@@ -350,12 +357,23 @@ class DayManager:
     async def _announce_bakery(self) -> None:
         """
         パン屋の能力を持つプレイヤーが生存している場合に、全体に通知する。
+        秒数によってメッセージが変化する
         """
         if self.game is not None:
             if any(p for p in self.game.alive_players if p.role.name == "Bakery"):
+                time = self.game.last_night_turn_time
+                self.logger.info(f"Last night was {time} seconds")
+
+                if time < 40:
+                    message_text = self.t.getstring("BakeryEarlyMessage")
+                elif time < 180:
+                    message_text = self.t.getstring("BakeryNormalMessage")
+                else:
+                    message_text = self.t.getstring("BakeryLateMessage")
+
                 embed = discord.Embed(
                     title="人狼ゲーム",
-                    description="パンが焼かれました。",
+                    description=message_text,
                     color=0xE59F5C,
                 )
                 await self.game.channel.send(embed=embed)
