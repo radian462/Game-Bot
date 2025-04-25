@@ -1,0 +1,18 @@
+[tool.ruff]
+# flake8相当のルールを選択
+select = ["E", "F", "W", "I"]  # E, F, W はflake8、Iはisort
+
+exclude = [
+    ".venv",
+    "venv",
+    "__pycache__",
+    "migrations",
+]
+
+target-version = "py311"
+
+line-length = 88
+fix = true
+
+[tool.ruff.isort]
+known-first-party = ["Game", "Modules"]
