@@ -1,6 +1,6 @@
 [tool.ruff]
 # flake8相当のルールを選択
-select = ["E", "F", "W", "I"]  # E, F, W はflake8、Iはisort
+lint.select = ["E", "F", "W", "I"]  # E, F, W はflake8、Iはisort
 
 exclude = [
     ".venv",
@@ -14,5 +14,7 @@ target-version = "py311"
 line-length = 88
 fix = true
 
-[tool.ruff.isort]
+[tool.isort]
 known-first-party = ["Game", "Modules"]
+profile = "black"
+line_length = 88
