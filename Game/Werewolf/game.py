@@ -1,4 +1,5 @@
 import logging
+import os
 from dataclasses import dataclass, field
 
 import discord
@@ -56,6 +57,9 @@ class WerewolfGame:
     joinview: JoinView
     logger: logging.LoggerAdapter
     translator: Translator
+
+    # 環境変数DEBUGにTrueが格納されていればデバッグモードを起動
+    debug: bool = os.getenv("DEBUG", "false").lower() == "true"
 
     is_started: bool = False
     is_ended: bool = False

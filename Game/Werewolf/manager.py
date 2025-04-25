@@ -1,9 +1,10 @@
 import asyncio
 import random
+import time
 from collections import Counter
 
 import discord
-import time
+
 import Modules.global_value as g
 from Game.Werewolf import player
 from Game.Werewolf.Roles.Villager import Villager
