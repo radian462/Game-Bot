@@ -9,7 +9,7 @@ async def main(id: int):
     while True:
         await werewolf_manager.night()
 
-        if not game.bedug:
+        if not game.debug:
             await werewolf_manager.win_check()
 
         if game is not None and game.is_ended:
@@ -17,7 +17,7 @@ async def main(id: int):
 
         await werewolf_manager.day()
 
-        if not game.bedug:
+        if not game.debug:
             await werewolf_manager.win_check()
 
         if game is not None and game.is_ended:

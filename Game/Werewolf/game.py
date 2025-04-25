@@ -35,6 +35,8 @@ class WerewolfGame:
         ロガー
     translator : Translator
         翻訳クラス
+    debug : bool
+        デバッグモードかどうか
     is_started : bool
         ゲームが開始されたかどうか
     participant_ids : set[int]
@@ -58,8 +60,7 @@ class WerewolfGame:
     logger: logging.LoggerAdapter
     translator: Translator
 
-    # 環境変数DEBUGにTrueが格納されていればデバッグモードを起動
-    debug: bool = os.getenv("DEBUG", "false").lower() == "true"
+    debug: bool = False
 
     is_started: bool = False
     is_ended: bool = False
@@ -155,5 +156,10 @@ class WerewolfGame:
         """
 
         self.is_started = True
-        await main.main(self.id)
+
+        if os.getenv("DEBUG", "").strip().lower() == "true":
+            self.debug = True
+            self.logger.info("This game is in debug mode")
+
         self.logger.info(f"Game {self.id} started.")
+        await main.main(self.id)
