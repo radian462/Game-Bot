@@ -6,13 +6,14 @@ from helpers.make_logger import make_logger
 
 from .phases.game_start_phase import GameStartPhase
 from .player import Player
+from .roles.role import Role
 
 
 @dataclass
 class WerewolfGameConfig:
     id: int
     player_ids: list[int] = field(default_factory=list)
-    roles: dict[str, int] = field(default_factory=dict)
+    roles: dict[Role, int] = field(default_factory=dict)
 
     channel_id: int | None = None
     guild_id: int | None = None
