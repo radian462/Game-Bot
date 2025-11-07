@@ -6,4 +6,24 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "discord-py>=2.6.4",
+    "rich>=14.2.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.4",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 88
+fix = true
+
+[tool.ruff.lint]
+select = ["I", "E", "F", "W"]
+ignore = ["E501"] # line too long
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
