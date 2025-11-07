@@ -5,6 +5,7 @@ from discord import Client
 from helpers.make_logger import make_logger
 
 from .phases.game_start_phase import GameStartPhase
+from .player import Player
 
 
 @dataclass
@@ -26,13 +27,12 @@ class WerewolfGameManager:
         if self.client is not None:
             self.logger.info("Client is None, Starting game with test mode.")
 
-    async def send_direct_message(self, player_id: int, message: str):
+    async def send_direct_message(self, player: Player, message: str):
         if self.client is None:
-            self.logger.info(f"(Test Mode) Sending DM to {player_id}: {message}")
+            self.logger.info(f"(Test Mode) Sending DM to {player.id}: {message}")
             return
 
-        user = await self.client.fetch_user(player_id)
-        await user.send(message)
+        await player.member.send(message)
 
     async def send_announce(self, message: str):
         if self.client is None:

@@ -4,6 +4,7 @@ import discord
 from roles.role import Role
 
 from helpers.make_logger import make_logger
+
 from .main import WerewolfGameManager
 
 
@@ -28,8 +29,9 @@ class Player:
         self.logger = make_logger("WerewolfGame.Player", id)
 
     async def initialize(self):
-        self.member = await self.client.fetch_user(self.id)
-        self.name = self.member.name
+        if self.client is not None:
+            self.member = await self.client.fetch_user(self.id)
+            self.name = self.member.name
 
     async def message(
         self, content: str | None = None, embed: discord.Embed | None = None, view=None
