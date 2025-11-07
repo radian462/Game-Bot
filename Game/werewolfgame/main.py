@@ -42,4 +42,16 @@ class WerewolfGameManager:
             return
 
     def game_start(self):
-        GameStartPhase()
+        GameStartPhase.run()
+
+    def morning_phase(self):
+        pass
+
+    def voting_phase(self):
+        pass
+
+    def night_phase(self):
+        pass
+
+    def game_end(self):
+        pass
